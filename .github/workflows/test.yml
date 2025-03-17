@@ -1,0 +1,58 @@
+name: API Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: courses
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Run migrations
+      run: |
+        export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/courses
+        python -c "from alembic import command; from alembic.config import Config; config = Config('alembic.ini'); command.upgrade(config, 'head')"
+    
+    - name: Test with pytest
+      run: |
+        export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/courses
+        pytest --cov=app --cov-report=term-missing
+    
+    - name: Upload coverage report
+      uses: codecov/codecov-action@v3
+      if: success()
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        fail_ci_if_error: false 
