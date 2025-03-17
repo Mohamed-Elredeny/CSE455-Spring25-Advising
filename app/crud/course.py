@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
-from sqlalchemy import delete
+from sqlalchemy import delete, or_
 
 from app.models.models import Course, Section, prerequisite_association
 from app.schemas.schemas import CourseCreate, SectionCreate
@@ -123,4 +123,61 @@ def add_prerequisites(db: Session, course_id: str, prerequisite_ids: List[str]):
                     prerequisite_id=prereq_id
                 )
             )
-    db.commit() 
+    db.commit()
+
+# Search for courses
+def search_courses(db: Session, query: str, search_by: str = "all"):
+    """
+    Search for courses based on different criteria
+    
+    Args:
+        db: Database session
+        query: Search query string
+        search_by: Field to search in (all, title, description, instructor, department, course_id)
+        
+    Returns:
+        List of courses that match the search criteria
+    """
+    # Create base query with eager loading of relationships
+    base_query = db.query(Course).options(
+        joinedload(Course.prerequisites),
+        joinedload(Course.sections)
+    )
+    
+    # Apply search filter based on search_by parameter
+    search_term = f"%{query}%"  # Add wildcards for LIKE query
+    
+    if search_by == "all":
+        # Search in all text fields
+        filtered_query = base_query.filter(
+            or_(
+                Course.title.ilike(search_term),
+                Course.description.ilike(search_term),
+                Course.instructor.ilike(search_term),
+                Course.department.ilike(search_term),
+                Course.course_id.ilike(search_term)
+            )
+        )
+    elif search_by == "title":
+        filtered_query = base_query.filter(Course.title.ilike(search_term))
+    elif search_by == "description":
+        filtered_query = base_query.filter(Course.description.ilike(search_term))
+    elif search_by == "instructor":
+        filtered_query = base_query.filter(Course.instructor.ilike(search_term))
+    elif search_by == "department":
+        filtered_query = base_query.filter(Course.department.ilike(search_term))
+    elif search_by == "course_id":
+        filtered_query = base_query.filter(Course.course_id.ilike(search_term))
+    else:
+        # Default to search all if an invalid search_by value is provided
+        filtered_query = base_query.filter(
+            or_(
+                Course.title.ilike(search_term),
+                Course.description.ilike(search_term),
+                Course.instructor.ilike(search_term),
+                Course.department.ilike(search_term),
+                Course.course_id.ilike(search_term)
+            )
+        )
+    
+    return filtered_query.all() 

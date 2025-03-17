@@ -110,4 +110,41 @@ class TestCourseEndpoints:
         }
         
         response = client.post("/courses/", json=incomplete_course)
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY 
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    
+    def test_search_courses_all_fields(self, client, create_multiple_courses):
+        """Test searching courses across all fields."""
+        response = client.get("/courses/search/?query=CS")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        # Should find courses with CS in their course_id
+        assert len(data) > 0
+        for course in data:
+            assert "CS" in course["course_id"]
+    
+    def test_search_courses_by_title(self, client, create_multiple_courses):
+        """Test searching courses by title."""
+        response = client.get("/courses/search/?query=Introduction&search_by=title")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        # Should find courses with Introduction in their title
+        assert len(data) > 0
+        for course in data:
+            assert "Introduction" in course["title"]
+    
+    def test_search_courses_by_instructor(self, client, create_multiple_courses):
+        """Test searching courses by instructor."""
+        response = client.get("/courses/search/?query=Smith&search_by=instructor")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        # Check if courses with Smith as instructor are returned
+        if len(data) > 0:
+            for course in data:
+                assert "Smith" in course["instructor"]
+    
+    def test_search_courses_no_results(self, client, create_multiple_courses):
+        """Test searching courses with no results."""
+        response = client.get("/courses/search/?query=NonExistentCourse")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data) == 0 

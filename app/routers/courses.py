@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Any
+from typing import List, Any, Optional
 from fastapi.responses import JSONResponse
 
 from app.schemas.schemas import Course, CourseCreate
@@ -132,4 +132,42 @@ def delete_course(course_id: str, db: Session = Depends(get_db)):
     success = course_crud.delete_course(db, course_id=course_id)
     if not success:
         raise HTTPException(status_code=404, detail="Course not found")
-    return {"detail": "Course deleted successfully"} 
+    return {"detail": "Course deleted successfully"}
+
+@router.get("/search/", response_model=List[Course])
+def search_courses(
+    query: str,
+    search_by: Optional[str] = "all",  # all, title, description, instructor, department, course_id
+    db: Session = Depends(get_db)
+):
+    """
+    Search for courses based on various criteria.
+    - query: The search term
+    - search_by: Field to search in (all, title, description, instructor, department, course_id)
+    """
+    courses = course_crud.search_courses(db, query=query, search_by=search_by)
+    
+    # Manually convert courses to clean response format
+    response_courses = []
+    for course in courses:
+        course_dict = {
+            "course_id": course.course_id,
+            "title": course.title,
+            "description": course.description,
+            "instructor": course.instructor,
+            "credits": course.credits,
+            "department": course.department,
+            "prerequisites": [p.course_id for p in course.prerequisites] if course.prerequisites else [],
+            "sections": [{
+                "id": s.id,
+                "section_id": s.section_id,
+                "instructor": s.instructor,
+                "schedule_day": s.schedule_day,
+                "schedule_time": s.schedule_time,
+                "capacity": s.capacity,
+                "course_id": s.course_id
+            } for s in course.sections] if course.sections else []
+        }
+        response_courses.append(course_dict)
+    
+    return response_courses 
