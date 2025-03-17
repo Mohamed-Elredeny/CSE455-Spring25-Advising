@@ -114,13 +114,20 @@ class TestCourseEndpoints:
     
     def test_search_courses_all_fields(self, client, create_multiple_courses):
         """Test searching courses across all fields."""
-        response = client.get("/courses/search/?query=CS")
+        response = client.get("/courses/search/?query=course")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        # Should find courses with CS in their course_id
+        # Should find courses with "course" in any field
         assert len(data) > 0
         for course in data:
-            assert "CS" in course["course_id"]
+            # For "all" search mode, the term should appear in at least one of the fields
+            assert any([
+                "course" in course["course_id"].lower(),
+                "course" in course["title"].lower(),
+                "course" in course["description"].lower(),
+                "course" in course["instructor"].lower(),
+                "course" in course["department"].lower()
+            ]), f"Search term 'course' not found in any field of {course['course_id']}"
     
     def test_search_courses_by_title(self, client, create_multiple_courses):
         """Test searching courses by title."""
