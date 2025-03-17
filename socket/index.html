@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Private Chat</title>
+    <style>
+        #chat { 
+            height: 300px; 
+            overflow-y: scroll; 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+        }
+        #users { 
+            height: 300px; 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <input id="username" placeholder="Enter your username">
+        <button onclick="connect()">Connect</button>
+    </div>
+    <div style="display: flex; margin-top: 20px;">
+        <div id="users" style="width: 200px;"></div>
+        <div style="margin-left: 20px; flex-grow: 1;">
+            <div id="chat"></div>
+            <select id="recipient" style="margin-top: 10px;"></select>
+            <input id="message" placeholder="Type a message" style="width: 200px;">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let username;
+
+        function connect() {
+            username = document.getElementById('username').value;
+            if (!username) {
+                alert('Please enter a username');
+                return;
+            }
+
+            ws = new WebSocket(`ws://localhost:8081`); // Adjust port if needed
+
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ name: username }));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'users') {
+                    updateUsers(data.users);
+                } else if (data.type === 'private') {
+                    addMessage(data);
+                } else if (data.announcement) {
+                    document.getElementById('chat').innerHTML += 
+                        `<p><i>${data.announcement}</i></p>`;
+                }
+                scrollToBottom();
+            };
+        }
+
+        function updateUsers(users) {
+            const userList = document.getElementById('users');
+            const recipientSelect = document.getElementById('recipient');
+            userList.innerHTML = '<h3>Online Users:</h3>';
+            recipientSelect.innerHTML = '<option value="">Select recipient</option>';
+
+            users.forEach(user => {
+                if (user !== username) {
+                    userList.innerHTML += `<p>${user}</p>`;
+                    recipientSelect.innerHTML += `<option value="${user}">${user}</option>`;
+                }
+            });
+        }
+
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            const recipient = document.getElementById('recipient').value;
+            
+            if (!message || !recipient) {
+                alert('Please select a recipient and enter a message');
+                return;
+            }
+
+            ws.send(JSON.stringify({ 
+                to: recipient, 
+                message: message 
+            }));
+            document.getElementById('message').value = '';
+        }
+
+        function addMessage(data) {
+            const chat = document.getElementById('chat');
+            chat.innerHTML += `<p><b>${data.from} to ${data.to || 'you'}</b>: ${data.message}</p>`;
+        }
+
+        function scrollToBottom() {
+            const chat = document.getElementById('chat');
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+</body>
+</html>
