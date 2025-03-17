@@ -115,7 +115,7 @@ const Mixed: FC = () => {
           <div className='col-xl-4'>
             <MixedWidget4
               className='card-xl-stretch mb-xl-8'
-              image='/media/svg/brand-logos/plurk.svg'
+              image='/media/auth/logo.png'
               color='danger'
               title='Monthly Subscription'
               date='Due: 27 Apr 2020'
@@ -128,7 +128,7 @@ const Mixed: FC = () => {
           <div className='col-xl-4'>
             <MixedWidget4
               className='card-xl-stretch mb-xl-8'
-              image='/media/svg/brand-logos/vimeo.svg'
+              image='/media/auth/logo.png'
               color='primary'
               title='Monthly Subscription'
               date='Due: 27 Apr 2020'
@@ -142,7 +142,7 @@ const Mixed: FC = () => {
           <div className='col-xl-4'>
             <MixedWidget4
               className='card-xl-stretch mb-5 mb-xl-8'
-              image='/media/svg/brand-logos/kickstarter.svg'
+              image='/media/auth/logo.png'
               color='success'
               title='Monthly Subscription'
               date='Due: 27 Apr 2020'
@@ -159,7 +159,7 @@ const Mixed: FC = () => {
           <div className='col-xl-4'>
             <MixedWidget5
               className='card-xl-stretch mb-xl-8'
-              image='/media/svg/brand-logos/plurk.svg'
+              image='/media/auth/logo.png'
               time='7 hours ago'
               title='PitStop - Multiple Email Generator'
               description='Pitstop creates quick email campaigns.<br/>We help to strengthen your brand<br/>for your every purpose.'
@@ -171,7 +171,7 @@ const Mixed: FC = () => {
           <div className='col-xl-4'>
             <MixedWidget5
               className='card-xl-stretch mb-xl-8'
-              image='/media/svg/brand-logos/telegram.svg'
+              image='/media/auth/logo.png'
               time='10 days ago'
               title='ReactJS Admin Theme'
               description='Keenthemes uses the latest and greatest frameworks<br/>with ReactJS for complete modernization and<br/>future.'
@@ -183,7 +183,7 @@ const Mixed: FC = () => {
           <div className='col-xl-4'>
             <MixedWidget5
               className='card-xl-stretch mb-5 mb-xl-8'
-              image='/media/svg/brand-logos/vimeo.svg'
+              image='/media/auth/logo.png'
               time='2 weeks ago'
               title='KT.com - High Quality Templates'
               description='Easy to use, incredibly flexible and secure<br/>with in-depth documentation that outlines<br/>everything for you'
