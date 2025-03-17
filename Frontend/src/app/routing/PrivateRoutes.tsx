@@ -16,7 +16,7 @@ const PrivateRoutes = () => {
   return (
     <Routes>
       <Route element={<MasterLayout />}>
-        {/* Redirect to Dashboard after success login/registration */}
+        {/* Redirect to GPA Simulator after success login/registration */}
         <Route path='auth/*' element={<Navigate to='/gpa-simulator' />} />
         
         {/* Pages */}

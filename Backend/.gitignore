@@ -7,8 +7,6 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
 # Environment variables
 .env
@@ -20,9 +18,6 @@ lerna-debug.log*
 # Build directories
 /dist
 /build
-dist
-dist-ssr
-*.local
 
 # Coverage directory
 /coverage
@@ -33,17 +28,11 @@ dist-ssr
 .cache
 
 # IDE specific files
-.vscode/*
-!.vscode/extensions.json
 .idea/
+.vscode/
 *.swp
 *.swo
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
 
 # OS specific files
 .DS_Store
-Thumbs.db
+Thumbs.db 

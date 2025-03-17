@@ -105,15 +105,15 @@ sequelize.sync({
 // ======================
 // Route Mounting
 // ======================
-app.use('/api/', studentRoutes);
-app.use('/api/', courseRoutes);
-app.use('/api/', gradeRoutes);
-app.use('/api/', semesterRoutes);
-app.use('/api/', gpaRuleRoutes);
-app.use('/api/', programPlanRoutes);
-app.use('/api/', graduationRequirementRoutes);
-app.use('/api/', gpaCalculatorRoutes);
-app.use('/api/', graduationRoutes);
+app.use('/simulator/', studentRoutes);
+app.use('/simulator/', courseRoutes);
+app.use('/simulator/', gradeRoutes);
+app.use('/simulator/', semesterRoutes);
+app.use('/simulator/', gpaRuleRoutes);
+app.use('/simulator/', programPlanRoutes);
+app.use('/simulator/', graduationRequirementRoutes);
+app.use('/simulator/', gpaCalculatorRoutes);
+app.use('/simulator/', graduationRoutes);
 
 // ======================
 // Error Handling Middleware

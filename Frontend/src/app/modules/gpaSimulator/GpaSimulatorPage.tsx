@@ -9,7 +9,7 @@ const GpaSimulatorPage: FC = () => {
   return (
     <>
       <PageTitle>GPA Simulator</PageTitle>
-      <div className='row g-5'>
+      <div className='row g-5 pt-5 mt-5 mx-4'>
         {/* GPA Calculator Column */}
         <div className='col-md-6'>
           <div className='card card-flush h-md-100'>
