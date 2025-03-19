@@ -1,21 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { calculateCGPA, simulateRetake, getGpaRules, getStudentCourses } from '../../../Api/api';
+import { calculateCGPA, simulateRetake, getGpaRules, getStudentProgramCourses } from '../../../Api/api';
 import { KTIcon } from '../../../../_metronic/helpers';
 
+interface ProgramCourse {
+  course_id: string;
+  course_name: string;
+  credits: number;
+  category: string;
+  current_grade: string | null;
+  is_taken: boolean;
+  grade_points: number | null;
+  semester_id: string | null;
+}
+
+interface GpaRule {
+  letter_grade: string;
+  gpa_points: number;
+  min_percentage: number;
+  max_percentage: number;
+}
+
 const GpaCalculator = () => {
-  const [gpaRules, setGpaRules] = useState([]);
+  const [gpaRules, setGpaRules] = useState<GpaRule[]>([]);
   const [studentId, setStudentId] = useState('');
-  const [cgpa, setCgpa] = useState(null);
+  const [cgpa, setCgpa] = useState<number | null>(null);
   const [simulateData, setSimulateData] = useState({ 
     student_id: '', 
     course_id: '', 
     new_grade: '' 
   });
-  const [simulatedCgpa, setSimulatedCgpa] = useState(null);
+  const [simulatedCgpa, setSimulatedCgpa] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [simulateLoading, setSimulateLoading] = useState(false);
   const [error, setError] = useState('');
-  const [studentCourses, setStudentCourses] = useState([]);
+  const [programCourses, setProgramCourses] = useState<ProgramCourse[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
 
   useEffect(() => {
@@ -32,25 +50,24 @@ const GpaCalculator = () => {
   }, []);
 
   useEffect(() => {
-    const fetchStudentCourses = async () => {
+    const fetchStudentProgramCourses = async () => {
       if (simulateData.student_id) {
         try {
           setCoursesLoading(true);
-          const response = await getStudentCourses(simulateData.student_id);
-          const coursesFromGrades = response.data.grades.map(grade => grade.course);
-          setStudentCourses(coursesFromGrades);
+          const response = await getStudentProgramCourses(simulateData.student_id);
+          setProgramCourses(response.data.courses);
           setError('');
         } catch (error) {
-          console.error('Error fetching student courses:', error);
+          console.error('Error fetching student program courses:', error);
           setError('Failed to load student courses');
-          setStudentCourses([]);
+          setProgramCourses([]);
         } finally {
           setCoursesLoading(false);
         }
       }
     };
 
-    fetchStudentCourses();
+    fetchStudentProgramCourses();
   }, [simulateData.student_id]);
 
   const handleCalculateCGPA = async () => {
@@ -183,13 +200,14 @@ const GpaCalculator = () => {
                     {coursesLoading ? (
                       <option disabled>Loading student courses...</option>
                     ) : (
-                      studentCourses.map((course) => (
+                      programCourses.map((course) => (
                         <option key={course.course_id} value={course.course_id}>
-                          {course.name} ({course.course_id})
+                          {course.course_name} ({course.course_id}) 
+                          {!course.is_taken ? ' - Not Taken' : ` - Current Grade: ${course.current_grade}`}
                         </option>
                       ))
                     )}
-                    {studentCourses.length === 0 && !coursesLoading && (
+                    {programCourses.length === 0 && !coursesLoading && (
                       <option disabled>No courses found for this student</option>
                     )}
                   </select>
@@ -222,7 +240,7 @@ const GpaCalculator = () => {
                       Simulating... <span className='spinner-border spinner-border-sm align-middle ms-2'></span>
                     </span>
                   ) : (
-                    'Simulate Retake'
+                    'Simulate Grade'
                   )}
                 </button>
 
