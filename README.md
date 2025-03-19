@@ -1,6 +1,6 @@
 ﻿# CSR455-Spring25 University Advising System
 
-# University Advising System - Repository Structure
+#Repository Structure
 
 ```
 university-advising-system/
