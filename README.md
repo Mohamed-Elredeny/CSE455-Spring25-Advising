@@ -1,5 +1,8 @@
 ﻿# CSR455-Spring25 University Advising System
 
+# University Advising System - Repository Structure
+
+```
 university-advising-system/
 │
 ├── .github/                         # GitHub specific files
@@ -107,6 +110,7 @@ university-advising-system/
 ├── docker-compose.yml               # Docker Compose for local development
 ├── LICENSE                          # License file
 └── README.md                        # Main project documentation
+```
 
 
 ## Project Overview
