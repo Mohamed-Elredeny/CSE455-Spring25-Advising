@@ -1,111 +1,112 @@
 ﻿# CSR455-Spring25 University Advising System
 
 university-advising-system/
-├── .github/                               # GitHub specific files
-│   ├── workflows/                         # GitHub Actions workflows
-│   │   ├── build.yml                      # Build workflow
-│   │   ├── test.yml                       # Test workflow
-│   │   └── deploy.yml                     # Deployment workflow
-│   ├── ISSUE_TEMPLATE/                    # Issue templates
+│
+├── .github/                         # GitHub specific files
+│   ├── workflows/                   # GitHub Actions workflows
+│   │   ├── build.yml                # Build workflow
+│   │   ├── test.yml                 # Test workflow
+│   │   └── deploy.yml               # Deployment workflow
+│   ├── ISSUE_TEMPLATE/              # Issue templates
 │   │   ├── bug_report.md
 │   │   ├── feature_request.md
 │   │   └── custom.md
-│   └── PULL_REQUEST_TEMPLATE.md           # PR template
+│   └── PULL_REQUEST_TEMPLATE.md     # PR template
 │
-├── frontend/                              # Frontend application
+├── frontend/                        # Frontend application
 │   ├── src/
-│   │   ├── modules/                       # Feature modules by team
-│   │   │   ├── team1/                     # Team 1: Core Authentication & User Management
-│   │   │   │   ├── auth/                  # Authentication Service
-│   │   │   │   ├── profile/               # Student Profile Service
-│   │   │   │   └── admin/                 # Admin Service
+│   │   ├── modules/                 # Feature modules by team
+│   │   │   ├── team1/               # Team 1: Core Authentication & User Management
+│   │   │   │   ├── auth/            # Authentication Service
+│   │   │   │   ├── profile/         # Student Profile Service
+│   │   │   │   └── admin/           # Admin Service
 │   │   │   │
-│   │   │   ├── team2/                     # Team 2: Academic Planning & Course Management
-│   │   │   │   ├── catalog/               # Course Catalog Service
-│   │   │   │   ├── registration/          # Course Registration Service
-│   │   │   │   └── plan/                  # Academic Plan Service
+│   │   │   ├── team2/               # Team 2: Academic Planning & Course Management
+│   │   │   │   ├── catalog/         # Course Catalog Service
+│   │   │   │   ├── registration/    # Course Registration Service
+│   │   │   │   └── plan/            # Academic Plan Service
 │   │   │   │
-│   │   │   └── team3/                     # Team 3: Advising & Communication
-│   │   │       ├── appointment/           # Advising Appointment Service
-│   │   │       ├── chat/                  # Chat Service
-│   │   │       ├── notification/          # Notification Service
-│   │   │       └── grade-simulator/       # Grade Simulator Service
+│   │   │   └── team3/               # Team 3: Advising & Communication
+│   │   │       ├── appointment/     # Advising Appointment Service
+│   │   │       ├── chat/            # Chat Service
+│   │   │       ├── notification/    # Notification Service
+│   │   │       └── grade-simulator/ # Grade Simulator Service
 │   │   │
-│   │   ├── shared/                        # Shared resources
-│   │   ├── routes/                        # Routing configuration
-│   │   ├── store/                         # Global state management
-│   │   ├── layouts/                       # Layout templates
-│   │   ├── styles/                        # Global styles
-│   │   ├── assets/                        # Static assets
-│   │   ├── config/                        # Config files
+│   │   ├── shared/                  # Shared resources
+│   │   ├── routes/                  # Routing configuration
+│   │   ├── store/                   # Global state management
+│   │   ├── layouts/                 # Layout templates
+│   │   ├── styles/                  # Global styles
+│   │   ├── assets/                  # Static assets
+│   │   ├── config/                  # Config files
 │   │   ├── App.jsx
 │   │   └── index.jsx
 │   │
-│   ├── public/                            # Static files
-│   ├── .eslintrc.js                       # ESLint config
-│   ├── .prettierrc                        # Prettier config
-│   ├── Dockerfile                         # Docker config for frontend
+│   ├── public/                      # Static files
+│   ├── .eslintrc                    # ESLint config
+│   ├── .prettierrc                  # Prettier config
+│   ├── Dockerfile                   # Docker config for frontend
 │   ├── package.json
-│   └── README.md                          # Frontend documentation
+│   └── README.md                    # Frontend documentation
 │
-├── services/                              # Backend microservices
-│   ├── team1/                             # Team 1 services
-│   │   ├── authentication-service/        # Authentication service
-│   │   │   ├── src/                       # Source code
-│   │   │   ├── Dockerfile                 # Docker config
-│   │   │   ├── package.json               # Dependencies
-│   │   │   └── README.md                  # Service documentation
+├── services/                        # Backend microservices
+│   ├── team1/                       # Team 1 services
+│   │   ├── authentication-service/  # Authentication service
+│   │   │   ├── src/                 # Source code
+│   │   │   ├── Dockerfile           # Docker config
+│   │   │   ├── package.json         # Dependencies
+│   │   │   └── README.md            # Service documentation
 │   │   │
-│   │   ├── student-profile-service/       # Student profile service
-│   │   └── admin-service/                 # Admin service
+│   │   ├── student-profile-service/ # Student profile service
+│   │   └── admin-service/           # Admin service
 │   │
-│   ├── team2/                             # Team 2 services
-│   │   ├── course-catalog-service/        # Course catalog service
-│   │   ├── course-registration-service/   # Registration service
-│   │   └── academic-plan-service/         # Academic plan service
+│   ├── team2/                       # Team 2 services
+│   │   ├── course-catalog-service/  # Course catalog service
+│   │   ├── course-registration-service/ # Registration service
+│   │   └── academic-plan-service/   # Academic plan service
 │   │
-│   └── team3/                             # Team 3 services
-│       ├── appointment-service/           # Appointment service
-│       ├── chat-service/                  # Chat service
-│       ├── notification-service/          # Notification service
-│       └── grade-simulator-service/       # Grade simulator service
+│   └── team3/                       # Team 3 services
+│       ├── appointment-service/     # Appointment service
+│       ├── chat-service/            # Chat service
+│       ├── notification-service/    # Notification service
+│       └── grade-simulator-service/ # Grade simulator service
 │
-├── kubernetes/                            # Kubernetes deployment files
-│   ├── dev/                               # Development environment
-│   │   ├── frontend/                      # Frontend K8s resources
-│   │   ├── team1/                         # Team 1 K8s resources
-│   │   ├── team2/                         # Team 2 K8s resources
-│   │   └── team3/                         # Team 3 K8s resources
+├── kubernetes/                      # Kubernetes deployment files
+│   ├── dev/                         # Development environment
+│   │   ├── frontend/                # Frontend K8s resources
+│   │   ├── team1/                   # Team 1 K8s resources
+│   │   ├── team2/                   # Team 2 K8s resources
+│   │   └── team3/                   # Team 3 K8s resources
 │   │
-│   ├── staging/                           # Staging environment
-│   └── prod/                              # Production environment
+│   ├── staging/                     # Staging environment
+│   └── prod/                        # Production environment
 │
-├── docs/                                  # Documentation
-│   ├── architecture/                      # Architecture docs
-│   │   ├── diagrams/                      # Architecture diagrams
-│   │   └── decisions/                     # Architecture decision records
+├── docs/                            # Documentation
+│   ├── architecture/                # Architecture docs
+│   │   ├── diagrams/                # Architecture diagrams
+│   │   └── decisions/               # Architecture decision records
 │   │
-│   ├── api/                               # API documentation
-│   │   ├── team1/                         # Team 1 API docs
-│   │   ├── team2/                         # Team 2 API docs
-│   │   └── team3/                         # Team 3 API docs
+│   ├── api/                         # API documentation
+│   │   ├── team1/                   # Team 1 API docs
+│   │   ├── team2/                   # Team 2 API docs
+│   │   └── team3/                   # Team 3 API docs
 │   │
-│   ├── guides/                            # Guides and tutorials
-│   │   ├── development/                   # Development guides
-│   │   ├── deployment/                    # Deployment guides
-│   │   └── user/                          # User guides
+│   ├── guides/                      # Guides and tutorials
+│   │   ├── development/             # Development guides
+│   │   ├── deployment/              # Deployment guides
+│   │   └── user/                    # User guides
 │   │
-│   └── testing/                           # Testing documentation
+│   └── testing/                     # Testing documentation
 │
-├── scripts/                               # Utility scripts
-│   ├── setup.sh                           # Setup script
-│   ├── build-all.sh                       # Build all services
-│   └── deploy.sh                          # Deployment script
+├── scripts/                         # Utility scripts
+│   ├── setup.sh                     # Setup script
+│   ├── build-all.sh                 # Build all services
+│   └── deploy.sh                    # Deployment script
 │
-├── .gitignore                             # Git ignore file
-├── docker-compose.yml                     # Docker Compose for local development
-├── LICENSE                                # License file
-└── README.md                              # Main project documentation
+├── .gitignore                       # Git ignore file
+├── docker-compose.yml               # Docker Compose for local development
+├── LICENSE                          # License file
+└── README.md                        # Main project documentation
 
 
 ## Project Overview
