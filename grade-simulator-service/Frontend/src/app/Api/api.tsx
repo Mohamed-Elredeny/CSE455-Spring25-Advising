@@ -15,6 +15,7 @@ export const deleteSemester = (id) => API.delete(`/semesters/${id}`);
 export const getStudents = () => API.get('/students');
 export const getStudent = (id) => API.get(`/students/${id}`);
 export const getStudentCourses = (id) => API.get(`/students/${id}/grades`);
+export const getStudentProgramCourses = (id) => API.get(`/students/${id}/program-courses`);
 export const createStudent = (data) => API.post('/students', data);
 export const updateStudent = (id, data) => API.put(`/students/${id}`, data);
 export const deleteStudent = (id) => API.delete(`/students/${id}`);
@@ -73,6 +74,8 @@ const api = {
   deleteSemester,
   getStudents,
   getStudent,
+  getStudentCourses,
+  getStudentProgramCourses,
   createStudent,
   updateStudent,
   deleteStudent,
