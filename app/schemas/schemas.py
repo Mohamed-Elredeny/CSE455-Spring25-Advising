@@ -18,6 +18,19 @@ class Section(SectionBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+# Category schemas
+class CategoryBase(BaseModel):
+    name: str
+    description: str
+
+class CategoryCreate(CategoryBase):
+    pass
+
+class Category(CategoryBase):
+    id: int
+    
+    model_config = ConfigDict(from_attributes=True)
+
 # Course schemas
 class CourseBase(BaseModel):
     course_id: str
@@ -26,10 +39,13 @@ class CourseBase(BaseModel):
     instructor: str
     credits: int
     department: str
+    is_core: bool = False
+    level: Optional[int] = None
 
 class CourseCreate(CourseBase):
     prerequisites: List[str] = []
     sections: List[SectionCreate] = []
+    categories: List[str] = []  # List of category names
 
 class PrerequisiteCourse(BaseModel):
     course_id: str
@@ -38,9 +54,10 @@ class PrerequisiteCourse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class Course(CourseBase):
-    # For displaying prerequisites, we'll just show the IDs
+    # For displaying prerequisites, we'll show the IDs
     prerequisites: List[str] = []
     sections: List[Section] = []
+    categories: List[str] = []  # List of category names
 
     model_config = ConfigDict(from_attributes=True)
     
@@ -60,10 +77,29 @@ class Course(CourseBase):
                 elif isinstance(prereq, str):
                     processed_prereqs.append(prereq)
             data['prerequisites'] = processed_prereqs
+            
+        # Process categories if present
+        if 'categories' in data and data['categories']:
+            processed_categories = []
+            for category in data['categories']:
+                if hasattr(category, 'name'):
+                    processed_categories.append(category.name)
+                elif isinstance(category, str):
+                    processed_categories.append(category)
+            data['categories'] = processed_categories
+            
         return data
 
 # For listing courses
 class CourseList(BaseModel):
     courses: List[Course]
 
+    model_config = ConfigDict(from_attributes=True)
+
+# Dependency resolution response
+class DependencyResolution(BaseModel):
+    course_id: str
+    title: str
+    prerequisites: List[Dict[str, Any]]  # Recursive structure for prereq tree
+    
     model_config = ConfigDict(from_attributes=True) 

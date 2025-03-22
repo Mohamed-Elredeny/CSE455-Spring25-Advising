@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, JSON, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -12,6 +12,24 @@ prerequisite_association = Table(
     Column("prerequisite_id", String, ForeignKey("courses.course_id"))
 )
 
+# Program category table
+program_category = Table(
+    "program_category",
+    Base.metadata,
+    Column("course_id", String, ForeignKey("courses.course_id")),
+    Column("category_id", Integer, ForeignKey("categories.id"))
+)
+
+class Category(Base):
+    __tablename__ = "categories"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True, unique=True)
+    description = Column(String)
+    
+    # Relationship with courses
+    courses = relationship("Course", secondary=program_category, back_populates="categories")
+
 class Course(Base):
     __tablename__ = "courses"
 
@@ -21,6 +39,8 @@ class Course(Base):
     instructor = Column(String)
     credits = Column(Integer)
     department = Column(String)
+    is_core = Column(Boolean, default=False)  # Whether this is a core course
+    level = Column(Integer, nullable=True)  # Course level (e.g., 100, 200, etc.)
     
     # Relationship for prerequisites (self-referential)
     prerequisites = relationship(
@@ -31,6 +51,9 @@ class Course(Base):
         backref="prerequisite_for",
         lazy="joined"  # Ensure prerequisites are eagerly loaded
     )
+    
+    # Relationship with categories
+    categories = relationship("Category", secondary=program_category, back_populates="courses")
     
     # Relationship with sections
     sections = relationship("Section", back_populates="course", cascade="all, delete-orphan")

@@ -11,6 +11,8 @@ class TestCourseEndpoints:
         data = response.json()
         assert data["course_id"] == sample_course_data["course_id"]
         assert data["title"] == sample_course_data["title"]
+        assert data["is_core"] == sample_course_data["is_core"]
+        assert data["level"] == sample_course_data["level"]
         assert len(data["sections"]) == 1
     
     def test_read_course(self, client, create_sample_course):
@@ -20,6 +22,8 @@ class TestCourseEndpoints:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["course_id"] == course_id
+        assert "is_core" in data
+        assert "level" in data
         assert len(data["sections"]) == 1
     
     def test_read_nonexistent_course(self, client):
@@ -40,6 +44,8 @@ class TestCourseEndpoints:
         updated_data = sample_course_data.copy()
         updated_data["title"] = "Updated Course Title"
         updated_data["credits"] = 4
+        updated_data["is_core"] = False
+        updated_data["level"] = 200
         
         response = client.put(f"/courses/{course_id}", json=updated_data)
         assert response.status_code == status.HTTP_200_OK
@@ -47,6 +53,8 @@ class TestCourseEndpoints:
         data = response.json()
         assert data["title"] == "Updated Course Title"
         assert data["credits"] == 4
+        assert data["is_core"] == False
+        assert data["level"] == 200
     
     def test_update_nonexistent_course(self, client, sample_course_data):
         """Test updating a non-existent course."""
@@ -78,7 +86,10 @@ class TestCourseEndpoints:
             "instructor": "Alice Johnson",
             "credits": 4,
             "department": "Computer Science",
+            "is_core": True,
+            "level": 300,
             "prerequisites": ["CS101", "CS201"],
+            "categories": [],
             "sections": [
                 {
                     "section_id": "CS301-A",
@@ -100,6 +111,42 @@ class TestCourseEndpoints:
         assert len(data["prerequisites"]) == 2
         assert "CS101" in data["prerequisites"]
         assert "CS201" in data["prerequisites"]
+    
+    def test_create_course_with_categories(self, client, create_multiple_categories):
+        """Test creating a course with categories."""
+        # New course with categories
+        new_course = {
+            "course_id": "CS305",
+            "title": "Computer Graphics",
+            "description": "Introduction to computer graphics",
+            "instructor": "Bob Williams",
+            "credits": 4,
+            "department": "Computer Science",
+            "is_core": False,
+            "level": 300,
+            "prerequisites": [],
+            "categories": ["Elective", "Programming"],
+            "sections": [
+                {
+                    "section_id": "CS305-A",
+                    "instructor": "Bob Williams",
+                    "schedule_day": "Wednesday",
+                    "schedule_time": "2:00 PM",
+                    "capacity": 30
+                }
+            ]
+        }
+        
+        response = client.post("/courses/", json=new_course)
+        assert response.status_code == status.HTTP_201_CREATED
+        
+        # Verify categories were added
+        response = client.get("/courses/CS305")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["categories"]) == 2
+        assert "Elective" in data["categories"]
+        assert "Programming" in data["categories"]
     
     def test_validation_errors(self, client):
         """Test validation errors for course creation."""

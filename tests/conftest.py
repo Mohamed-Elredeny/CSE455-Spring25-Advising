@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from app.database.database import Base, get_db
 from app.main import app
-from app.models.models import Course, Section, prerequisite_association
+from app.models.models import Course, Section, prerequisite_association, Category, program_category
 
 # Use an in-memory SQLite database for testing
 TEST_DATABASE_URL = "sqlite:///./test.db"
@@ -77,7 +77,10 @@ def sample_course_data():
         "instructor": "John Doe",
         "credits": 3,
         "department": "Computer Science",
+        "is_core": True,
+        "level": 100,
         "prerequisites": [],
+        "categories": [],
         "sections": [
             {
                 "section_id": "CS101-A",
@@ -87,6 +90,14 @@ def sample_course_data():
                 "capacity": 30
             }
         ]
+    }
+
+@pytest.fixture
+def sample_category_data():
+    """Sample category data for tests."""
+    return {
+        "name": "Core Computer Science",
+        "description": "Foundational courses in computer science"
     }
 
 @pytest.fixture
@@ -110,7 +121,9 @@ def create_sample_course(db_session, sample_course_data):
         description=sample_course_data["description"],
         instructor=sample_course_data["instructor"],
         credits=sample_course_data["credits"],
-        department=sample_course_data["department"]
+        department=sample_course_data["department"],
+        is_core=sample_course_data.get("is_core", False),
+        level=sample_course_data.get("level", None)
     )
     db_session.add(course)
     
@@ -132,6 +145,18 @@ def create_sample_course(db_session, sample_course_data):
     return course
 
 @pytest.fixture
+def create_sample_category(db_session, sample_category_data):
+    """Create a sample category in the database."""
+    category = Category(
+        name=sample_category_data["name"],
+        description=sample_category_data["description"]
+    )
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    return category
+
+@pytest.fixture
 def create_multiple_courses(db_session):
     """Create multiple courses for testing list/search functionality."""
     courses = [
@@ -141,7 +166,9 @@ def create_multiple_courses(db_session):
             description="An introductory course to computer science",
             instructor="John Doe",
             credits=3,
-            department="Computer Science"
+            department="Computer Science",
+            is_core=True,
+            level=100
         ),
         Course(
             course_id="CS201",
@@ -149,7 +176,9 @@ def create_multiple_courses(db_session):
             description="Course on data structures",
             instructor="Jane Smith",
             credits=4,
-            department="Computer Science"
+            department="Computer Science",
+            is_core=True,
+            level=200
         ),
         Course(
             course_id="MATH101",
@@ -157,7 +186,9 @@ def create_multiple_courses(db_session):
             description="Introduction to calculus",
             instructor="Robert Johnson",
             credits=3,
-            department="Mathematics"
+            department="Mathematics",
+            is_core=True,
+            level=100
         )
     ]
     
@@ -177,4 +208,52 @@ def create_multiple_courses(db_session):
     
     db_session.commit()
     
-    return courses 
+    return courses
+
+@pytest.fixture
+def create_multiple_categories(db_session):
+    """Create multiple categories for testing."""
+    categories = [
+        Category(name="Core", description="Core curriculum courses"),
+        Category(name="Elective", description="Elective courses"),
+        Category(name="Programming", description="Programming-focused courses"),
+        Category(name="Theory", description="Theoretical computer science courses")
+    ]
+    
+    for category in categories:
+        db_session.add(category)
+    
+    db_session.commit()
+    
+    # Add courses to categories
+    db_session.execute(
+        program_category.insert().values(
+            course_id="CS101",
+            category_id=categories[0].id  # Core
+        )
+    )
+    
+    db_session.execute(
+        program_category.insert().values(
+            course_id="CS101",
+            category_id=categories[2].id  # Programming
+        )
+    )
+    
+    db_session.execute(
+        program_category.insert().values(
+            course_id="CS201",
+            category_id=categories[0].id  # Core
+        )
+    )
+    
+    db_session.execute(
+        program_category.insert().values(
+            course_id="CS201",
+            category_id=categories[2].id  # Programming
+        )
+    )
+    
+    db_session.commit()
+    
+    return categories 

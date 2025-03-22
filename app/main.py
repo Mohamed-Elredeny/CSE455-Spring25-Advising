@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import courses, sections
+from app.routers import courses, sections, categories
 from app.database.database import engine, Base
 
 # Note: We're not creating tables here anymore
@@ -25,6 +25,7 @@ app.add_middleware(
 # Include routers
 app.include_router(courses.router)
 app.include_router(sections.router)
+app.include_router(categories.router)
 
 @app.get("/")
 def read_root():
