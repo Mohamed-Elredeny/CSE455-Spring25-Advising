@@ -67,3 +67,4 @@ jobs:
       - name: Display built image tags
         if: github.event_name != 'pull_request'
         run: echo "The following image has been pushed to DockerHub - ${{ steps.meta.outputs.tags }}" 
+        
