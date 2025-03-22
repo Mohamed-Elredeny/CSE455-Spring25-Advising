@@ -140,6 +140,48 @@ Once the application is running, visit:
 - ReDoc: http://localhost:8000/redoc
 - OpenAPI JSON: http://localhost:8000/openapi.json
 
+## Docker Hub Integration
+
+This project automatically builds and pushes Docker images to Docker Hub using GitHub Actions. The workflow is triggered by:
+
+- Pushing to the `main` or `master` branch
+- Creating tags with pattern `v*` (e.g., v1.0.0)
+- Manually running the workflow through GitHub UI
+
+### Setting up GitHub Secrets for Docker Hub
+
+To enable the Docker Hub integration, you must add the following secrets to your GitHub repository:
+
+1. Go to your GitHub repository → Settings → Secrets and variables → Actions
+2. Add the following repository secrets:
+   - `DOCKERHUB_USERNAME`: Your Docker Hub username
+   - `DOCKERHUB_TOKEN`: Your Docker Hub access token (not your password)
+
+To generate a Docker Hub access token:
+1. Log in to [Docker Hub](https://hub.docker.com)
+2. Go to Account Settings → Security → New Access Token
+3. Create a token with an appropriate description and permissions
+4. Copy the token immediately (it won't be shown again)
+
+### Docker Image Tags
+
+The workflow generates several tags for the image:
+
+- Branch name (e.g., `main`, `development`)
+- PR number for pull requests
+- Semantic version for tags (e.g., `v1.0.0`, `1.0`)
+- Short commit SHA
+
+### Using the Docker Image
+
+Once published, you can pull the image from Docker Hub:
+
+```bash
+docker pull <username>/cse455-spring25-advising:main
+```
+
+Replace `<username>` with your Docker Hub username and adjust the tag as needed.
+
 ## API Endpoints
 
 ### Courses
