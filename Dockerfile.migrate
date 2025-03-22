@@ -1,0 +1,22 @@
+FROM python:3.9
+
+# Install PostgreSQL client and other dependencies
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+# Make wait-for-postgres.sh executable
+RUN chmod +x wait-for-postgres.sh
+
+# Set Python path to include the app directory
+ENV PYTHONPATH=/app
+
+# Run alembic migrations
+CMD ["bash", "-c", "./wait-for-postgres.sh db && alembic upgrade add_missing_columns"] 

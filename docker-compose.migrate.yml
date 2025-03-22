@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    container_name: course-migrate
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/courses
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=courses
+    depends_on:
+      - db
+    networks:
+      - course-network
+
+  db:
+    image: postgres:14
+    container_name: course-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=courses
+    ports:
+      - "5432:5432"
+    networks:
+      - course-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  course-network:
+    driver: bridge 
