@@ -1,0 +1,115 @@
+.appointments-container {
+  max-width: 800px;
+  margin: 120px auto;
+  padding: 20px;
+  background: linear-gradient(135deg, #141e30 30%, #243b55 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  text-align: center;
+  font-family: "Poppins", sans-serif;
+}
+
+h2 {
+  font-size: 26px;
+  margin-bottom: 20px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.error {
+  color: #ff4d4d;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.appointments-list {
+  list-style: none;
+  padding: 0;
+}
+
+.appointment-item {
+  background: linear-gradient(135deg, #141e30 30%, #243b55 100%);
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.appointment-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.appointment-item div {
+  text-align: left;
+}
+
+.appointment-item strong {
+  color: #00aaff;
+}
+
+.buttons {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.edit-btn,
+.cancel-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: 0.3s ease;
+}
+
+.edit-btn {
+  background: #00c853;
+  color: white;
+}
+
+.edit-btn:hover {
+  background: #00e676;
+  box-shadow: 0 2px 8px rgba(0, 255, 134, 0.5);
+}
+
+.cancel-btn {
+  background: #ff3d00;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #ff6d00;
+  box-shadow: 0 2px 8px rgba(255, 61, 0, 0.5);
+}
+
+p {
+  font-size: 16px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+  .appointments-container {
+    width: 90%;
+    padding: 15px;
+  }
+
+  .appointment-item {
+    padding: 12px;
+  }
+
+  .edit-btn,
+  .cancel-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+}
