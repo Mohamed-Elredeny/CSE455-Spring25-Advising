@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { API_BASE_URL } from "../config"; // Ensure API URL is set
-import "./AppointmentsPage.css";
+import { API_BASE_URL } from "../config";
+import {
+  Container,
+  Title,
+  StyledCalendar,
+  AppointmentList,
+  AppointmentItem,
+  EditButton,
+  CancelButton,
+} from "../pages/AppointmentsPageStyles";
 
 const AppointmentsPage = () => {
   const [appointments, setAppointments] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -70,35 +79,55 @@ const AppointmentsPage = () => {
     }
   };
 
+  const tileClassName = ({ date }) => {
+    return appointments.some(
+      (appt) =>
+        new Date(appt.date_time).toDateString() === date.toDateString()
+    )
+      ? "appointment-day"
+      : "";
+  };
+
+  const selectedAppointments = appointments.filter(
+    (appt) =>
+      new Date(appt.date_time).toDateString() === selectedDate.toDateString()
+  );
+
   return (
-    <div className="appointments-container">
-      <h2>All Appointments</h2>
+    <Container>
+      <Title>Appointments Calendar</Title>
 
       {loading && <p>Loading...</p>}
       {error && <p className="error">{error}</p>}
 
-      {appointments.length > 0 ? (
-        <ul className="appointments-list">
-          {appointments.map((appointment) => (
-            <li key={appointment._id} className="appointment-item">
-              <div>
-                <strong>Student ID:</strong> {appointment.student_id} <br />
+      <StyledCalendar
+        onChange={setSelectedDate}
+        value={selectedDate}
+        tileClassName={tileClassName}
+      />
+
+      <div>
+        <h3>Appointments on {selectedDate.toDateString()}</h3>
+        {selectedAppointments.length > 0 ? (
+          <AppointmentList>
+            {selectedAppointments.map((appointment) => (
+              <AppointmentItem key={appointment._id}>
                 <strong>Advisor:</strong> {appointment.advisor_id} <br />
-                <strong>Date:</strong> {new Date(appointment.date_time).toLocaleString()} <br />
+                <strong>Time:</strong> {new Date(appointment.date_time).toLocaleTimeString()} <br />
                 <strong>Reason:</strong> {appointment.reason || "N/A"} <br />
                 <strong>Status:</strong> {appointment.status}
-              </div>
-              <div className="buttons">
-                <button className="edit-btn" onClick={() => handleEdit(appointment._id)}>Edit</button>
-                <button className="cancel-btn" onClick={() => handleCancel(appointment._id)}>Cancel</button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        !loading && <p>No appointments found.</p>
-      )}
-    </div>
+                <div>
+                  <EditButton onClick={() => handleEdit(appointment._id)}>Edit</EditButton>
+                  <CancelButton onClick={() => handleCancel(appointment._id)}>Cancel</CancelButton>
+                </div>
+              </AppointmentItem>
+            ))}
+          </AppointmentList>
+        ) : (
+          <p>No appointments for this day.</p>
+        )}
+      </div>
+    </Container>
   );
 };
 

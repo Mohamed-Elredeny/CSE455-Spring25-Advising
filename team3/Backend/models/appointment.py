@@ -1,5 +1,5 @@
-# Task 1 : Data base Schema
-
+# Task 1 week5 : Data base Schema
+# Task 2 week6 : Implement recurring appointments
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
@@ -9,8 +9,14 @@ class Appointment(BaseModel):
     student_id: str
     advisor_id: str
     date_time: datetime
-    status: str  # Scheduled, Completed, Canceled
+    status: str = "pending"  # Default status
     reason: Optional[str] = None
+
+    recurring: bool = False  #
+    recurrence_pattern: Optional[str] = None  # "daily", "weekly", "monthly"
+    recurrence_end_date: Optional[datetime] = None  # End date for recurrence
+    reminder_sent: bool = False  # Track if reminder was sent
+
 
     class Config:
         orm_mode = True

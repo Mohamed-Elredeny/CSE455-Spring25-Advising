@@ -9,14 +9,15 @@ import {
   SubmitButton
 } from "../components/AppointmentPanelStyles"; // Adjust path if needed
 
-const API_BASE_URL = "http://localhost:8000/api"; // Adjust based on your FastAPI URL
+const API_BASE_URL = "http://localhost:8000/api"; // Adjust FastAPI URL if needed
 
 const AppointmentPanel = ({ isOpen, onClose }) => {
   const [appointmentData, setAppointmentData] = useState({
     student_id: "",
     advisor_id: "",
     date_time: "",
-    reason: ""
+    reason: "",
+    recurrence: "None" // Default: No recurrence
   });
 
   const [loading, setLoading] = useState(false);
@@ -64,7 +65,10 @@ const AppointmentPanel = ({ isOpen, onClose }) => {
       advisor_id: appointmentData.advisor_id,
       date_time: new Date(appointmentData.date_time).toISOString(), // Ensures correct format
       status: "Scheduled", // FastAPI expects status
-      reason: appointmentData.reason || null
+      reason: appointmentData.reason || null,
+      recurring: appointmentData.recurrence === "None" ? false : true, // Send recurrence only if set
+      recurrence_pattern: appointmentData.recurrence === "None" ? null : appointmentData.recurrence,
+      // recurrence_end_date: appointmentData.recurrence === "None" ? null : new Date(appointmentData.recurrence_end_date).toISOString()
     };
 
     console.log("Submitting appointment:", formattedData); // Debugging
@@ -72,10 +76,10 @@ const AppointmentPanel = ({ isOpen, onClose }) => {
     try {
       const result = await bookAppointment(formattedData);
       console.log("Appointment booked successfully:", result);
-      setSuccess("Appointment booked successfully!");
-      
+      setSuccess(`Appointment booked successfully! ${appointmentData.recurrence !== "None" ? `Recurring: ${appointmentData.recurrence}` : ""}`);
+
       // Reset form after success
-      setAppointmentData({ student_id: "", advisor_id: "", date_time: "", reason: "" });
+      setAppointmentData({ student_id: "", advisor_id: "", date_time: "", reason: "", recurrence: "None" });
 
       // Close panel after 2 seconds
       setTimeout(() => {
@@ -132,6 +136,25 @@ const AppointmentPanel = ({ isOpen, onClose }) => {
             placeholder="Reason (Optional)"
             value={appointmentData.reason}
             onChange={handleChange}
+          />
+
+          {/* Recurrence Dropdown */}
+          <Select
+            name="recurrence"
+            value={appointmentData.recurrence}
+            onChange={handleChange}
+          >
+            <option value="None">No Recurrence</option>
+            <option value="Daily">Daily</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Monthly">Monthly</option>
+          </Select>
+          <Input
+            type="datetime-local"
+            name="date_time"
+            value={appointmentData.recurrence_end_date}
+            onChange={handleChange}
+            required
           />
           <SubmitButton type="submit" disabled={loading || !appointmentData.student_id || !appointmentData.advisor_id || !appointmentData.date_time}>
             {loading ? "Booking..." : "Confirm Appointment"}

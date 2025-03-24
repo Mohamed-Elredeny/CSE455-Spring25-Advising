@@ -50,9 +50,33 @@ def book_appointment(appointment_data: dict):
         if isinstance(appointment_data["date_time"], str):
             appointment_data["date_time"] = datetime.fromisoformat(appointment_data["date_time"])
 
+        appointment_data["status"] = "pending"
+
         # Insert the appointment (MongoDB will enforce uniqueness)
         result = appointments_collection.insert_one(appointment_data)
         return {"message": "Appointment booked successfully!", "id": str(result.inserted_id)}, 201
 
     except DuplicateKeyError:
         raise HTTPException(status_code=400, detail="This time slot is already booked for this advisor.")
+        
+def confirm_appointment(appointment_id: str):
+    """Advisor confirms an appointment."""
+    result = appointments_collection.update_one(
+        {"_id": ObjectId(appointment_id)},
+        {"$set": {"status": "confirmed"}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Appointment not found or already confirmed.")
+    
+    return {"message": "Appointment confirmed successfully."}
+
+def reject_appointment(appointment_id: str):
+    """Advisor rejects an appointment."""
+    result = appointments_collection.update_one(
+        {"_id": ObjectId(appointment_id)},
+        {"$set": {"status": "rejected"}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Appointment not found or already rejected.")
+    
+    return {"message": "Appointment rejected."}
