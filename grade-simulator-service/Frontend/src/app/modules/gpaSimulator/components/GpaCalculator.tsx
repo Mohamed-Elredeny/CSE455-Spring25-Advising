@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { calculateCGPA, simulateRetake, getGpaRules, getStudentProgramCourses } from '../../../Api/api';
+import { calculateCGPA, getGpaRules } from '../../../Api/api';
 import { KTIcon } from '../../../../_metronic/helpers';
-
-interface ProgramCourse {
-  course_id: string;
-  course_name: string;
-  credits: number;
-  category: string;
-  current_grade: string | null;
-  is_taken: boolean;
-  grade_points: number | null;
-  semester_id: string | null;
-}
 
 interface GpaRule {
   letter_grade: string;
@@ -20,94 +9,56 @@ interface GpaRule {
   max_percentage: number;
 }
 
-const GpaCalculator = () => {
-  const [gpaRules, setGpaRules] = useState<GpaRule[]>([]);
-  const [studentId, setStudentId] = useState('');
-  const [cgpa, setCgpa] = useState<number | null>(null);
-  const [simulateData, setSimulateData] = useState({ 
-    student_id: '', 
-    course_id: '', 
-    new_grade: '' 
-  });
-  const [simulatedCgpa, setSimulatedCgpa] = useState<number | null>(null);
+interface GpaCalculatorProps {
+  studentId: string;
+}
+
+const GpaCalculator: React.FC<GpaCalculatorProps> = ({ studentId }) => {
+  const [currentCgpa, setCurrentCgpa] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [simulateLoading, setSimulateLoading] = useState(false);
   const [error, setError] = useState('');
-  const [programCourses, setProgramCourses] = useState<ProgramCourse[]>([]);
-  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [gpaRules, setGpaRules] = useState<GpaRule[]>([]);
 
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const fetchGpaRules = async () => {
       try {
-        const gpaRulesRes = await getGpaRules();
-        setGpaRules(gpaRulesRes.data);
+        const response = await getGpaRules();
+        setGpaRules(response.data);
       } catch (error) {
-        console.error('Error fetching data:', error);
-        setError('Failed to load initial data');
+        console.error('Error fetching GPA rules:', error);
+        setError('Failed to load GPA rules');
       }
     };
-    fetchInitialData();
+    fetchGpaRules();
   }, []);
 
   useEffect(() => {
-    const fetchStudentProgramCourses = async () => {
-      if (simulateData.student_id) {
-        try {
-          setCoursesLoading(true);
-          const response = await getStudentProgramCourses(simulateData.student_id);
-          setProgramCourses(response.data.courses);
-          setError('');
-        } catch (error) {
-          console.error('Error fetching student program courses:', error);
-          setError('Failed to load student courses');
-          setProgramCourses([]);
-        } finally {
-          setCoursesLoading(false);
-        }
+    const fetchCgpa = async () => {
+      if (!studentId) return;
+      
+      try {
+        setLoading(true);
+        const response = await calculateCGPA(studentId);
+        setCurrentCgpa(response.data.cgpa);
+        setError('');
+      } catch (error) {
+        console.error('Error calculating CGPA:', error);
+        setError('Failed to calculate CGPA - Please check Student ID');
+        setCurrentCgpa(null);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchStudentProgramCourses();
-  }, [simulateData.student_id]);
-
-  const handleCalculateCGPA = async () => {
-    if (!studentId) return;
-    try {
-      setLoading(true);
-      const response = await calculateCGPA(studentId);
-      setCgpa(response.data.cgpa);
-      setError('');
-    } catch (error) {
-      console.error('Error calculating CGPA:', error);
-      setError('Failed to calculate CGPA - Please check Student ID');
-      setCgpa(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSimulateRetake = async () => {
-    if (!simulateData.student_id || !simulateData.course_id || !simulateData.new_grade) return;
-    try {
-      setSimulateLoading(true);
-      const response = await simulateRetake(simulateData);
-      setSimulatedCgpa(response.data.simulated_cgpa);
-      setError('');
-    } catch (error) {
-      console.error('Error simulating retake:', error);
-      setError('Failed to simulate retake - Please check inputs');
-      setSimulatedCgpa(null);
-    } finally {
-      setSimulateLoading(false);
-    }
-  };
+    fetchCgpa();
+  }, [studentId]);
 
   return (
     <div className='card'>
       <div className='card-header border-0 pt-5'>
         <h3 className='card-title align-items-start flex-column'>
-          <span className='card-label fw-bold fs-3 mb-1'>GPA Simulator</span>
-          <span className='text-muted mt-1 fw-semibold fs-7'>Calculate and simulate academic scenarios</span>
+          <span className='card-label fw-bold fs-3 mb-1'>GPA Calculator</span>
+          <span className='text-muted mt-1 fw-semibold fs-7'>Calculate student GPA</span>
         </h3>
       </div>
       
@@ -122,136 +73,17 @@ const GpaCalculator = () => {
         )}
 
         <div className='row g-5'>
-          {/* Current CGPA Section */}
-          <div className='col-md-6'>
-            <div className='card card-flush h-md-100'>
+          <div className='col-md-12'>
+            <div className='card card-flush'>
               <div className='card-header'>
                 <h3 className='card-title fw-bold text-gray-800'>Current CGPA Calculator</h3>
               </div>
               <div className='card-body pt-1'>
-                <div className='mb-10'>
-                  <label className='form-label'>Student ID</label>
-                  <input
-                    type="text"
-                    className='form-control form-control-solid'
-                    placeholder="Enter Student ID"
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                  />
-                </div>
-                
-                <button 
-                  className='btn btn-primary w-100'
-                  onClick={handleCalculateCGPA}
-                  disabled={!studentId || loading}
-                >
-                  {loading ? (
-                    <span className='indicator-progress' style={{display: 'block'}}>
-                      Please wait... <span className='spinner-border spinner-border-sm align-middle ms-2'></span>
-                    </span>
-                  ) : (
-                    'Calculate CGPA'
-                  )}
-                </button>
-
-                {cgpa && (
+                {currentCgpa && (
                   <div className='alert alert-success mt-5'>
                     <div className='d-flex align-items-center'>
                       <KTIcon iconName='tick-circle' className='fs-2hx text-success me-3' />
-                      <span className='fw-bold'>Current CGPA: {cgpa}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Simulation Section */}
-          <div className='col-md-6'>
-            <div className='card card-flush h-md-100'>
-              <div className='card-header'>
-                <h3 className='card-title fw-bold text-gray-800'>Retake Simulation</h3>
-              </div>
-              <div className='card-body pt-1'>
-                <div className='mb-10'>
-                  <label className='form-label'>Student ID</label>
-                  <input
-                    type="text"
-                    className='form-control form-control-solid'
-                    placeholder="Enter Student ID"
-                    value={simulateData.student_id}
-                    onChange={(e) => setSimulateData({
-                      student_id: e.target.value,
-                      course_id: '',
-                      new_grade: ''
-                    })}
-                  />
-                </div>
-
-                <div className='mb-10'>
-                  <label className='form-label'>Course</label>
-                  <select
-                    className='form-select form-select-solid'
-                    value={simulateData.course_id}
-                    onChange={(e) => setSimulateData({ ...simulateData, course_id: e.target.value })}
-                    disabled={coursesLoading || !simulateData.student_id}
-                  >
-                    <option value=''>Choose course...</option>
-                    {coursesLoading ? (
-                      <option disabled>Loading student courses...</option>
-                    ) : (
-                      programCourses.map((course) => (
-                        <option key={course.course_id} value={course.course_id}>
-                          {course.course_name} ({course.course_id}) 
-                          {!course.is_taken ? ' - Not Taken' : ` - Current Grade: ${course.current_grade}`}
-                        </option>
-                      ))
-                    )}
-                    {programCourses.length === 0 && !coursesLoading && (
-                      <option disabled>No courses found for this student</option>
-                    )}
-                  </select>
-                </div>
-
-                <div className='mb-10'>
-                  <label className='form-label'>New Grade</label>
-                  <select
-                    className='form-select form-select-solid'
-                    value={simulateData.new_grade}
-                    onChange={(e) => setSimulateData({ ...simulateData, new_grade: e.target.value })}
-                    disabled={!simulateData.course_id}
-                  >
-                    <option value=''>Select grade...</option>
-                    {gpaRules.map((rule) => (
-                      <option key={rule.letter_grade} value={rule.letter_grade}>
-                        {rule.letter_grade}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button 
-                  className='btn btn-danger w-100'
-                  onClick={handleSimulateRetake}
-                  disabled={!simulateData.student_id || !simulateData.course_id || !simulateData.new_grade || simulateLoading}
-                >
-                  {simulateLoading ? (
-                    <span className='indicator-progress' style={{display: 'block'}}>
-                      Simulating... <span className='spinner-border spinner-border-sm align-middle ms-2'></span>
-                    </span>
-                  ) : (
-                    'Simulate Grade'
-                  )}
-                </button>
-
-                {simulatedCgpa && (
-                  <div className='alert alert-info mt-5'>
-                    <div className='d-flex align-items-center'>
-                      <KTIcon iconName='abstract-11' className='fs-2hx text-info me-3' />
-                      <div>
-                        <span className='fw-bold'>Simulated CGPA: {simulatedCgpa}</span>
-                        <div className='fs-7 text-muted'>Based on selected parameters</div>
-                      </div>
+                      <span className='fw-bold'>Current CGPA: {currentCgpa}</span>
                     </div>
                   </div>
                 )}

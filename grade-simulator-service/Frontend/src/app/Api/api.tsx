@@ -57,13 +57,27 @@ export const deleteGraduationRequirement = (id) => API.delete(`/graduation-requi
 
 // GPA Calculations
 export const calculateCGPA = (studentId) => API.get(`/students/${studentId}/cgpa`);
-export const simulateRetake = (data) => API.post(`/students/${data.student_id}/simulate-retake`, {
-  course_id: data.course_id,
-  new_grade: data.new_grade
-});
+export const simulateRetake = (data) => {
+  // If courses array is provided, use it for multiple course simulation
+  if (data.courses && Array.isArray(data.courses) && data.courses.length > 0) {
+    return API.post(`/students/${data.student_id}/simulate-retake`, {
+      courses: data.courses
+    });
+  }
+  // Otherwise, use single course simulation
+  return API.post(`/students/${data.student_id}/simulate-retake`, {
+    course_id: data.course_id,
+    new_grade: data.new_grade
+  });
+};
 
 // Graduation Status
 export const checkGraduationStatus = (studentId) => API.get(`/students/${studentId}/graduation/`);
+
+// Multiple Course Simulation
+export const simulateMultipleCourses = (data) => API.post(`/students/${data.student_id}/simulate-multiple`, {
+  courses: data.courses
+});
 
 // Default export for easy imports
 const api = {
@@ -106,7 +120,8 @@ const api = {
   deleteGraduationRequirement,
   calculateCGPA,
   simulateRetake,
-  checkGraduationStatus
+  checkGraduationStatus,
+  simulateMultipleCourses
 };
 
 export default api;
