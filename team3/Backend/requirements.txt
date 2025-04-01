@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+pymongo
+python-dotenv
+python-jose[cryptography]  # For JWT
+passlib[bcrypt]            # For password hashing
+python-multipart           # For form data (login)
