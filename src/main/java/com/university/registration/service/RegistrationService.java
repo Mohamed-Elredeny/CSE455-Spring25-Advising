@@ -26,6 +26,9 @@ public class RegistrationService {
     @Autowired
     private CourseRepository courseRepository;
 
+    @Autowired
+    private WaitlistService waitlistService;
+
     private static final int FULL_LOAD_CREDITS = 18;
     private static final int HALF_LOAD_CREDITS = 9;
 
@@ -73,7 +76,41 @@ public class RegistrationService {
                 .orElseThrow(() -> new RuntimeException("Registration not found"));
 
         registration.setStatus(status);
-        return registrationRepository.save(registration);
+        Registration updated = registrationRepository.save(registration);
+
+        // If a registration was rejected or canceled, check waitlist
+        if (status == RegistrationStatus.REJECTED) {
+            checkWaitlistForPromotion(updated.getCourse());
+        }
+
+        return updated;
+    }
+
+    private void checkWaitlistForPromotion(Course course) {
+        // Only promote if course has available seats
+        if (course.getAvailableSeats() > 0) {
+            waitlistService.getNextEligibleForPromotion(course).ifPresent(entry -> {
+                try {
+                    // Attempt to register the waitlisted student
+                    Registration registration = registerStudent(
+                            entry.getStudent().getStudentId(),
+                            entry.getCourse().getCourseId(),
+                            "current-semester" // TODO: Get actual semester
+                    );
+
+                    // If successful, remove from waitlist and notify
+                    waitlistService.removeFromWaitlist(entry);
+                    waitlistService.notifyPromotion(entry);
+
+                    // Update course available seats
+                    course.setAvailableSeats(course.getAvailableSeats() - 1);
+                    courseRepository.save(course);
+                } catch (Exception e) {
+                    // Log failure but continue
+                    System.err.println("Failed to promote waitlisted student: " + e.getMessage());
+                }
+            });
+        }
     }
 
     // ✅ Generate Student Timetable (Only Approved Courses)

@@ -28,4 +28,5 @@ public class Course {
 
     private String schedule;  // ✅ Example: "Monday 10:00 AM - 12:00 PM"
     private boolean isOpenCourse;  // ✅ Determines if this course is open
+    private Integer availableSeats = 0; // Available seats for registration
 }
