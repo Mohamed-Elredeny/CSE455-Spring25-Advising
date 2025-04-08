@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: registration-config
+data:
+  SPRING_DATASOURCE_URL: jdbc:mysql://mysql.registration.svc.cluster.local:3306/registration_db
+  SPRING_DATASOURCE_USERNAME: root
+  SPRING_DATASOURCE_PASSWORD: password
+  SPRING_JPA_HIBERNATE_DDL_AUTO: update

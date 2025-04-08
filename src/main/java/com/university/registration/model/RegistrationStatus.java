@@ -4,5 +4,6 @@ public enum RegistrationStatus {  // ✅ Must be public
     PENDING,
     APPROVED,
     REJECTED,
-    WAITLISTED
+    WAITLISTED,
+    CANCELLED
 }

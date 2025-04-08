@@ -1,5 +1,7 @@
 package com.university.registration.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -38,4 +40,8 @@ public class Registration {
 
     @Enumerated(EnumType.STRING)
     private RegistrationStatus status;
+
+    private LocalDateTime registrationDate;
+    private LocalDateTime statusUpdateDate;
+    private String updatedBy; // Admin/System/Student
 }

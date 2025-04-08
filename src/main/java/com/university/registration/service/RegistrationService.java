@@ -1,7 +1,11 @@
 package com.university.registration.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.university.registration.model.RegistrationPeriod;
+import com.university.registration.repository.RegistrationPeriodRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +32,9 @@ public class RegistrationService {
 
     @Autowired
     private WaitlistService waitlistService;
+
+    @Autowired
+    private RegistrationPeriodRepository registrationPeriodRepository;
 
     private static final int FULL_LOAD_CREDITS = 18;
     private static final int HALF_LOAD_CREDITS = 9;
@@ -117,6 +124,44 @@ public class RegistrationService {
     public List<Registration> generateTimetable(Long studentId) {
         return registrationRepository.findByStudentStudentId(studentId).stream()
                 .filter(reg -> reg.getStatus() == RegistrationStatus.APPROVED)
-                .collect(Collectors.toList()); // Corrected method to collect the stream
+                .collect(Collectors.toList());
+    }
+
+    // ✅ Batch Registration
+    public List<Registration> batchRegister(List<Registration> registrations) {
+        return registrations.stream()
+                .map(reg -> {
+                    Registration newReg = new Registration();
+                    newReg.setStudent(reg.getStudent());
+                    newReg.setCourse(reg.getCourse());
+                    newReg.setSemester(reg.getSemester());
+                    newReg.setStatus(RegistrationStatus.PENDING);
+                    newReg.setRegistrationDate(LocalDateTime.now());
+                    return registrationRepository.save(newReg);
+                })
+                .collect(Collectors.toList());
+    }
+
+    // ✅ Cancel Registration
+    public Registration cancelRegistration(Long registrationId, String cancelledBy) {
+        Registration registration = registrationRepository.findById(registrationId)
+                .orElseThrow(() -> new RuntimeException("Registration not found"));
+
+        registration.setStatus(RegistrationStatus.CANCELLED);
+        registration.setStatusUpdateDate(LocalDateTime.now());
+        registration.setUpdatedBy(cancelledBy);
+
+        return registrationRepository.save(registration);
+    }
+
+    // ✅ Get Registration History
+    public List<Registration> getRegistrationHistory(Long studentId) {
+        return registrationRepository.findByStudentStudentId(studentId);
+    }
+
+    // ✅ Get Current Registration Period
+    public RegistrationPeriod getCurrentRegistrationPeriod() {
+        return registrationPeriodRepository.findFirstByIsActiveTrueOrderByStartDateDesc()
+                .orElseThrow(() -> new RuntimeException("No active registration period found"));
     }
 }
