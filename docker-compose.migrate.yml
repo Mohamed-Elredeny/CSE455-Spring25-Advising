@@ -11,8 +11,13 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=courses
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_TTL=3600
+      - CACHE_ENABLED=true
     depends_on:
       - db
+      - redis
     networks:
       - course-network
 
@@ -35,8 +40,24 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: course-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - course-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   course-network:
