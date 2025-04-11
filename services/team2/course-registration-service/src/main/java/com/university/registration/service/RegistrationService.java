@@ -4,17 +4,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.university.registration.model.RegistrationPeriod;
-import com.university.registration.repository.RegistrationPeriodRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.university.registration.model.Course;
-import com.university.registration.model.Registration; // Add this import
-import com.university.registration.model.RegistrationStatus;
+import com.university.registration.model.Registration;
+import com.university.registration.model.RegistrationPeriod;
+import com.university.registration.model.RegistrationStatus; // Add this import
 import com.university.registration.model.Student;
 import com.university.registration.repository.CourseRepository;
+import com.university.registration.repository.RegistrationPeriodRepository;
 import com.university.registration.repository.RegistrationRepository;
 import com.university.registration.repository.StudentRepository;
 
