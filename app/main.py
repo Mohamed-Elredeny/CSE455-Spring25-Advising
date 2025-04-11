@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import SQLAlchemyError
+from starlette_prometheus import metrics, PrometheusMiddleware
 
 from app.routers import courses, sections, categories
 from app.database.database import engine, Base
@@ -24,6 +25,10 @@ app = FastAPI(
     description="API for managing university courses and sections",
     version="1.0.0"
 )
+
+# Add Prometheus middleware
+app.add_middleware(PrometheusMiddleware)
+app.add_route("/metrics", metrics)
 
 # Configure CORS
 app.add_middleware(
