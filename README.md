@@ -1,3 +1,53 @@
+# CSE455-Spring25-Advising Service
+
+A comprehensive course catalog and advising system for CSE455 Spring 2025.
+
+## Overview
+
+This service provides a robust API for managing course catalogs, categories, and sections. It's built using FastAPI and includes features for course management, dependency tracking, and section scheduling.
+
+## Documentation
+
+- [API Documentation](docs/api/README.md) - Detailed API documentation
+- [Architecture](docs/architecture/README.md) - System architecture and design
+- [Development Guide](docs/development/README.md) - Development setup and guidelines
+- [Testing](docs/testing/README.md) - Testing strategy and guidelines
+- [Deployment](docs/deployment/README.md) - Deployment instructions and Kubernetes setup
+- [Database](docs/database/README.md) - Database schema and migrations
+
+## Quick Start
+
+1. Clone the repository
+2. Set up the development environment (see [Development Guide](docs/development/README.md))
+3. Run the service (see [Deployment](docs/deployment/README.md))
+
+## Features
+
+- Course catalog management
+- Category organization
+- Section scheduling
+- Course dependency tracking
+- Search functionality
+- Core course identification
+- Level-based course filtering
+
+## Technology Stack
+
+- FastAPI
+- PostgreSQL
+- Redis
+- Kubernetes
+- Alembic (for database migrations)
+- Pytest (for testing)
+
+## Contributing
+
+Please read our [Development Guide](docs/development/README.md) for details on our code of conduct and the process for submitting pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 # Course Management API
 
 A FastAPI-based CRUD API for managing university courses and sections using PostgreSQL and Docker.
