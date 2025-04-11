@@ -7,10 +7,8 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 from app.crud import course as course_crud
-from app.schemas.course import CourseCreate, CourseUpdate
-from app.schemas.section import SectionCreate
-from app.models.course import Course
-from app.models.section import Section
+from app.schemas import CourseCreate, CourseUpdate, SectionCreate
+from app.models import Course, Section
 
 logger = logging.getLogger(__name__)
 
