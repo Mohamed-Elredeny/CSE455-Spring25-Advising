@@ -5,6 +5,7 @@ pydantic==2.4.2
 alembic==1.12.1
 python-dotenv==1.0.0
 psycopg2-binary==2.9.6
+redis==5.0.1
 
 # Testing dependencies
 pytest==7.4.0

@@ -133,4 +133,43 @@ kubectl delete -f .
 
 - The application service is exposed as a LoadBalancer. For local development, you might want to change it to NodePort.
 - The database initialization job runs once to set up the database schema.
-- Make sure your Kubernetes cluster has enough resources allocated for the application and database. 
+- Make sure your Kubernetes cluster has enough resources allocated for the application and database.
+
+## Caching
+
+The application uses Redis for caching to improve performance. The caching configuration includes:
+
+- Redis deployment with persistent storage
+- Configurable cache TTL (default: 1 hour)
+- Cache invalidation support
+- Environment-based cache enable/disable
+
+### Cache Configuration
+
+Cache settings can be configured in the ConfigMap (`configmap.yaml`):
+
+- `REDIS_HOST`: Redis service hostname
+- `REDIS_PORT`: Redis service port
+- `CACHE_TTL`: Cache time-to-live in seconds
+- `CACHE_ENABLED`: Enable/disable caching
+
+### Using the Cache
+
+The cache can be used in your code using the `@cached` decorator:
+
+```python
+from app.utils.cache import cached
+
+@cached(ttl=1800)  # Cache for 30 minutes
+async def get_course_catalog():
+    # Your implementation here
+    pass
+```
+
+To invalidate cache entries:
+```python
+from app.utils.cache import invalidate_cache
+
+# Invalidate all cache entries for a specific prefix
+invalidate_cache("get_course_catalog")
+``` 
