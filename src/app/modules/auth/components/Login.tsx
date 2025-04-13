@@ -8,6 +8,7 @@ import {getUserByToken, login} from '../core/_requests'
 import {toAbsoluteUrl} from '../../../../_metronic/helpers'
 import {useAuth} from '../core/Auth'
 
+
 const loginSchema = Yup.object().shape({
   email: Yup.string()
     .email('Wrong email format')
@@ -21,8 +22,8 @@ const loginSchema = Yup.object().shape({
 })
 
 const initialValues = {
-  email: 'admin@demo.com',
-  password: 'demo',
+  email: '',
+  password: '',
 }
 
 /*
@@ -43,8 +44,10 @@ export function Login() {
       try {
         const {data: auth} = await login(values.email, values.password)
         saveAuth(auth)
-        const {data: user} = await getUserByToken(auth.api_token)
-        setCurrentUser(user)
+        // const {data: user} = await getUserByToken(auth.api_token)
+        const { access , refresh } = auth;
+        console.log(auth)
+        setCurrentUser(refresh)
       } catch (error) {
         console.error(error)
         saveAuth(undefined)
@@ -61,6 +64,8 @@ export function Login() {
       onSubmit={formik.handleSubmit}
       noValidate
       id='kt_login_signin_form'
+      method='post'
+      
     >
       {/* begin::Heading */}
       <div className='text-center mb-11'>

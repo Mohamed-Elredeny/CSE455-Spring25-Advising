@@ -6,7 +6,7 @@ import {useFormik} from 'formik'
 import {requestPassword} from '../core/_requests'
 
 const initialValues = {
-  email: 'admin@demo.com',
+  email: '',
 }
 
 const forgotPasswordSchema = Yup.object().shape({
@@ -114,7 +114,7 @@ export function ForgotPassword() {
             </span>
           )}
         </button>
-        <Link to='/auth/login'>
+        <Link to='/auth/reset-password/:uid/:token'>
           <button
             type='button'
             id='kt_login_password_reset_form_cancel_button'
