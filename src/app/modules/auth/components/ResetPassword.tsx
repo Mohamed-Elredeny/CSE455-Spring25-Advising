@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 import clsx from 'clsx';
 import { Link, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
-import { resetPassword } from '../core/_requests';
+import { resetPassword } from '../../../../../modules/auth/core/_requests';
 
 const initialValues = {
   new_password: '',
