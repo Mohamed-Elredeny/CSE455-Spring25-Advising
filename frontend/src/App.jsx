@@ -1,16 +1,14 @@
-import React from 'react';
-import NotificationList from './components/NotificationList';
-import NotificationForm from './components/NotificationForm';
+import React, { useState } from 'react';
 import './App.css'; // Optional custom CSS if needed
+import Notification from "./team3/notification/notificationTestUI.jsx"
 
 function App() {
-  const userId = 'student123'; // Hardcoded for now; replace with dynamic user ID later
+
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Notification Center</h1>
-      <NotificationForm userId={userId} onNotificationCreated={() => window.location.reload()} />
-      <NotificationList userId={userId} />
+     
+     <Notification />
     </div>
   );
 }
