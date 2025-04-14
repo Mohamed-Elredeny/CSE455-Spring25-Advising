@@ -3,6 +3,7 @@ FROM python:3.9
 # Install PostgreSQL client and other dependencies
 RUN apt-get update && apt-get install -y \
     postgresql-client \
+    redis-tools \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
