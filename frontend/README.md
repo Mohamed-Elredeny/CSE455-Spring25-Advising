@@ -1,4 +1,3 @@
-Let’s create detailed documentation for the frontend of your Notification Manager application, which is built using **React**, **Vite**, and **Tailwind CSS**. This documentation will serve as a guide for developers to understand, set up, and use the frontend, as well as provide insights into its structure, components, and interaction with the FastAPI backend.
 
 ---
 
