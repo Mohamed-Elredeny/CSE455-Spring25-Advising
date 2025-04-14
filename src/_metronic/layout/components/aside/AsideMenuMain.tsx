@@ -1,4 +1,3 @@
-
 import {useIntl} from 'react-intl'
 import {KTIcon} from '../../../helpers'
 import {AsideMenuItemWithSub} from './AsideMenuItemWithSub'
@@ -69,6 +68,7 @@ export function AsideMenuMain() {
         <AsideMenuItem to='/apps/chat/drawer-chat' title='Drawer Chart' hasBullet={true} />
       </AsideMenuItemWithSub>
       <AsideMenuItem to='/apps/user-management/users' icon='shield-tick' title='User management' />
+      <AsideMenuItem to='/grade-simulator' icon='calculator' title='Grade Simulator' />
       <div className='menu-item'>
         <div className='menu-content'>
           <div className='separator mx-1 my-4'></div>

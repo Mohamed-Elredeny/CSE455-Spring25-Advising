@@ -15,6 +15,7 @@ const PrivateRoutes = () => {
   const WidgetsPage = lazy(() => import('../modules/widgets/WidgetsPage'))
   const ChatPage = lazy(() => import('../modules/apps/chat/ChatPage'))
   const UsersPage = lazy(() => import('../modules/apps/user-management/UsersPage'))
+  const GpaSimulatorPage = lazy(() => import('../modules/team3/grade-simulator/pages/GpaSimulatorPage'))
 
   return (
     <Routes>
@@ -78,6 +79,15 @@ const PrivateRoutes = () => {
           element={
             <SuspensedView>
               <UsersPage />
+            </SuspensedView>
+          }
+        />
+        {/* Grade Simulator */}
+        <Route
+          path='grade-simulator'
+          element={
+            <SuspensedView>
+              <GpaSimulatorPage />
             </SuspensedView>
           }
         />
