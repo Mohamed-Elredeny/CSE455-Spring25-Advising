@@ -1,7 +1,8 @@
-import NotificationList from '../../components/team3/notification/NotificationList';
-import NotificationForm from '../../components/team3/notification/NotificationForm';
-import NotificationGroupForm from '../../components/team3/notification/NotificationGroupForm';
-import NotificationPreferences from '../../components/team3/notification/NotificationPreferences';
+import NotificationList from './components/NotificationList';
+import NotificationForm from './components/NotificationForm';
+import NotificationGroupForm from './components/NotificationGroupForm';
+import NotificationPreferences from './components/NotificationPreferences';
+import React, { useState } from 'react';
 
 function NotificationTestUI() {
     const [view, setView] = useState('notifications');
