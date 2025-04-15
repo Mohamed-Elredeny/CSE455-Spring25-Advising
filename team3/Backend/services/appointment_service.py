@@ -9,7 +9,7 @@ from typing import Optional
 
 # Timezone Configuration
 DEFAULT_TIMEZONE = 'UTC'  # Storing all times in UTC is recommended
-SERVER_TIMEZONE = 'America/New_York'  # Your server's local timezone
+SERVER_TIMEZONE = 'Africa/Cairo'  # Your server's local timezone
 
 class TimezoneHandler:
     @staticmethod
@@ -64,13 +64,30 @@ def create_appointment(appointment: dict):
                 appointment.get("timezone")
             )
         )
-        
         result = appointments_collection.insert_one(appointment)
         return {"message": "Appointment created", "id": str(result.inserted_id)}, 201
     except DuplicateKeyError:
         return {"error": "This time slot is already booked for this advisor."}, 400
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+def add_notes_to_appointment(appointment_id: str, notes: dict):
+    result = appointments_collection.update_one(
+        {"_id": ObjectId(appointment_id)},
+        {"$set": {"notes": notes}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    return {"message": "Notes added successfully"}
+
+def get_notes(appointment_id: str):
+    appointment = appointments_collection.find_one(
+        {"_id": ObjectId(appointment_id)},
+        {"notes": 1}
+    )
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    return appointment.get("notes", {})
 
 def get_appointment(appointment_id: str, timezone: Optional[str] = None):
     """Retrieve an appointment by its ID with optional timezone conversion."""

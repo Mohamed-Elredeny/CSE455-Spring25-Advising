@@ -5,6 +5,8 @@ from models.appointment import Appointment
 from services.appointment_service import book_appointment, get_appointment,get_all_appointments, update_appointment, delete_appointment, confirm_appointment, reject_appointment
 from services.reminder_service import send_email_reminder
 from datetime import datetime, timedelta
+from typing import Optional, Dict
+
 
 router = APIRouter()
 
@@ -68,4 +70,66 @@ async def schedule_reminders(background_tasks: BackgroundTasks):
                 background_tasks.add_task(send_email_reminder, student_email, appointment)
 
     return {"message": "Reminders scheduled"}
+
+# --- Meeting Notes Endpoints ---
+@router.post("/appointments/{appointment_id}/notes", status_code=201)
+async def add_or_update_notes(
+    appointment_id: str,
+    notes: Dict,  # Or use a Pydantic model like `NotesSchema`
+):
+    """
+    Add/update meeting notes for an appointment.
+    - `notes` format: {"summary": "...", "action_items": ["task1", ...]}
+    """
+    # Validate appointment exists and user has permission
+    appointment = appointments_collection.find_one({"_id": ObjectId(appointment_id)})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Optional: Check if current_user is advisor/student linked to this appointment
+    if current_user["id"] not in [appointment["advisor_id"], appointment["student_id"]]:
+        raise HTTPException(status_code=403, detail="Not authorized to edit notes")
+    
+    # Update notes
+    result = appointments_collection.update_one(
+        {"_id": ObjectId(appointment_id)},
+        {"$set": {"notes": notes}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Failed to update notes")
+    
+    return {"message": "Notes updated successfully"}
+
+
+@router.get("/appointments/{appointment_id}/notes")
+async def get_notes(
+    appointment_id: str,
+):
+    """Retrieve notes for an appointment."""
+    appointment = appointments_collection.find_one(
+        {"_id": ObjectId(appointment_id)},
+        {"notes": 1, "advisor_id": 1, "student_id": 1}  # Project only needed fields
+    )
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Optional: Check permissions
+    if current_user["id"] not in [appointment["advisor_id"], appointment["student_id"]]:
+        raise HTTPException(status_code=403, detail="Not authorized to view notes")
+    
+    return appointment.get("notes", {})
+
+
+@router.delete("/appointments/{appointment_id}/notes")
+async def clear_notes(
+    appointment_id: str,):
+    """Clear notes for an appointment (set to empty dict)."""
+    # Validate appointment and permissions (same as above)
+    result = appointments_collection.update_one(
+        {"_id": ObjectId(appointment_id)},
+        {"$set": {"notes": {}}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Appointment not found or notes already empty")
+    return {"message": "Notes cleared"}
 

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.appointment_routes import router as appointment_router
 from routes.auth import router as auth_router
+from routes.analytics_router import router as analytics_router
 
 app = FastAPI()
 
@@ -16,6 +17,7 @@ app.add_middleware(
 
 app.include_router(appointment_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(analytics_router, prefix="/api")
 
 
 

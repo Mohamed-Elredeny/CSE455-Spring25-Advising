@@ -4,6 +4,11 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Appointments from "./pages/Appointments";
 import NotFound from "./pages/NotFound";
+import NotesList from "./pages/NotesList";  
+import StudentAnalytics from "./pages/StudentAnalytics";
+import AdvisorAnalytics from './pages/AdvisorAnalytics';
+
+
 
 const App = () => {
   return (
@@ -13,6 +18,9 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/appointments" element={<Appointments />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/notes" element={<NotesList />} />
+        <Route path="/analytics" element={<StudentAnalytics />} />
+        <Route path="/advisor-analytics" element={<AdvisorAnalytics />} />
       </Routes>
     </Router>
   );

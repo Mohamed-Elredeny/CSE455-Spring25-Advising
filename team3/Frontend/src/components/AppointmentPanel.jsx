@@ -154,7 +154,7 @@ const AppointmentPanel = ({ isOpen, onClose }) => {
             name="date_time"
             value={appointmentData.recurrence_end_date}
             onChange={handleChange}
-            required
+            
           />
           <SubmitButton type="submit" disabled={loading || !appointmentData.student_id || !appointmentData.advisor_id || !appointmentData.date_time}>
             {loading ? "Booking..." : "Confirm Appointment"}

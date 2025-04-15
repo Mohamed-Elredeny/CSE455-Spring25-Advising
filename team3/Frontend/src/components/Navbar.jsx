@@ -15,6 +15,10 @@ const Navbar = () => {
         <ul className={`nav-menu ${isOpen ? "open" : ""}`}>
           <li><Link to="/">Home</Link></li>
           <li><Link to="/appointments">Appointments</Link></li>
+          <li><Link to="/notes">Notes</Link></li>
+          <li><Link to="/analytics">Analytics</Link></li>
+          <li><Link to="/advisor-analytics">Advisor Dashboard</Link></li>
+
         </ul>
         <div className="hamburger" onClick={() => setIsOpen(!isOpen)}>☰</div>
       </div>

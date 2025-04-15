@@ -17,6 +17,11 @@ class Appointment(BaseModel):
     recurrence_end_date: Optional[datetime] = None  # End date for recurrence
     reminder_sent: bool = False  # Track if reminder was sent
 
+    notes: Optional[dict] = {
+        "summary": "Initial thesis discussion",
+        "action_items": ["Submit draft", "Review feedback"],    
+    }
+
 
     class Config:
         orm_mode = True
