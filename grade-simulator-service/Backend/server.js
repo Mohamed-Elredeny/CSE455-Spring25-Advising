@@ -97,10 +97,12 @@ sequelize.authenticate()
 
 sequelize.sync({ 
   force: false,
-  alter: true
-})
-.then(() => console.log('Database synchronized'))
-.catch(err => console.error('Sync error:', err));
+  alter: false
+}).then(() => {
+  console.log('Database synchronized successfully');
+}).catch(err => {
+  console.error('Database synchronization error:', err);
+});
 
 // ======================
 // Route Mounting
@@ -114,6 +116,13 @@ app.use('/simulator/', programPlanRoutes);
 app.use('/simulator/', graduationRequirementRoutes);
 app.use('/simulator/', gpaCalculatorRoutes);
 app.use('/simulator/', graduationRoutes);
+
+// ======================
+// Health Check Endpoint
+// ======================
+app.get('/simulator/health', (req, res) => {
+  res.status(200).json({ status: 'healthy' });
+});
 
 // ======================
 // Error Handling Middleware
