@@ -69,6 +69,12 @@ export function AsideMenuMain() {
       </AsideMenuItemWithSub>
       <AsideMenuItem to='/apps/user-management/users' icon='shield-tick' title='User management' />
       <AsideMenuItem to='/grade-simulator' icon='calculator' title='Grade Simulator' />
+      <AsideMenuItemWithSub to='/courses' title='Course Management' icon='book'>
+        <AsideMenuItem to='/courses/browse' title='Course Browser' hasBullet={true} />
+        <AsideMenuItem to='/courses/search' title='Advanced Search' hasBullet={true} />
+        <AsideMenuItem to='/courses/categories' title='Categories' hasBullet={true} />
+        <AsideMenuItem to='/courses/compare' title='Compare Courses' hasBullet={true} />
+      </AsideMenuItemWithSub>
       <div className='menu-item'>
         <div className='menu-content'>
           <div className='separator mx-1 my-4'></div>

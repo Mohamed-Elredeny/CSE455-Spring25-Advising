@@ -10,6 +10,16 @@ export const REQUEST_PASSWORD_URL = `${API_URL}/api/auth/password/reset/`;
 
 // Server should return AuthModel
 export function login(email: string, password: string) {
+  // Development bypass for admin@demo.com/admin
+  if (import.meta.env.DEV && email === 'admin@demo.com' && password === 'admin') {
+    return Promise.resolve({
+      data: {
+        api_token: 'dev-bypass-token',
+        refreshToken: 'dev-bypass-refresh-token'
+      } as AuthModel
+    });
+  }
+
   return axios.post<AuthModel>(LOGIN_URL, {
     email,
     password,
