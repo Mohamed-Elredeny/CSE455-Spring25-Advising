@@ -9,7 +9,8 @@ from app.crud.academic_plan import (
     delete_academic_plan,
     check_requirements_fulfillment,
     approve_academic_plan,
-    reject_academic_plan  # Added import
+    reject_academic_plan,
+    compare_academic_plans,
 )
 from app.crud.plan_generation import generate_plan
 from app.core.database import get_db
@@ -67,7 +68,7 @@ def get_plan_versions(student_id: int, program: str, db: Session = Depends(get_d
     if not plans:
         raise HTTPException(status_code=404, detail="No plans found for the given student and program.")
     return plans
-
+# Implementing workflow logic for academic plans
 @router.put("/{academic_plan_id}/approve", response_model=AcademicPlan)
 def approve_plan(academic_plan_id: int, db: Session = Depends(get_db)):
     return approve_academic_plan(db, academic_plan_id)
@@ -75,3 +76,9 @@ def approve_plan(academic_plan_id: int, db: Session = Depends(get_db)):
 @router.put("/{academic_plan_id}/reject", response_model=AcademicPlan)
 def reject_plan(academic_plan_id: int, db: Session = Depends(get_db)):
     return reject_academic_plan(db, academic_plan_id)
+
+
+#comare two academic plans
+@router.post("/academic-plans/compare", response_model=dict)
+def compare_plans(plan_ids: list[int], db: Session = Depends(get_db)):
+    return compare_academic_plans(db, plan_ids)

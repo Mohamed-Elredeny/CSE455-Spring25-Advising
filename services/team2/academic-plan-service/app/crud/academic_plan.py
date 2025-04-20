@@ -277,3 +277,59 @@ def reject_academic_plan(db: Session, academic_plan_id: int):
     db.commit()
     db.refresh(db_plan)
     return db_plan
+
+def compare_academic_plans(db: Session, plan_ids: list[int]):
+    # Fetch the academic plans
+    plans = db.query(AcademicPlanModel).filter(AcademicPlanModel.id.in_(plan_ids)).all()
+    if len(plans) != len(plan_ids):
+        raise HTTPException(status_code=404, detail="One or more academic plans not found")
+
+    # Initialize comparison result
+    comparison_result = {
+        "plans": [],
+        "differences": {
+            "courses": [],
+            "semesters": [],
+            "total_credits": []
+        }
+    }
+
+    # Collect data for each plan
+    for plan in plans:
+        total_credits = sum(course.credits for semester in plan.semesters for course in semester.courses)
+        comparison_result["plans"].append({
+            "id": plan.id,
+            "student_id": plan.student_id,
+            "program": plan.program,
+            "version": plan.version,
+            "status": plan.status.value,
+            "total_credits": total_credits,
+            "semesters": [
+                {
+                    "name": semester.name,
+                    "courses": [{"code": course.code, "title": course.title, "credits": course.credits} for course in semester.courses]
+                }
+                for semester in plan.semesters
+            ]
+        })
+
+    # Compare plans
+    if len(plans) > 1:
+        # Compare total credits
+        total_credits_set = {plan["total_credits"] for plan in comparison_result["plans"]}
+        if len(total_credits_set) > 1:
+            comparison_result["differences"]["total_credits"] = list(total_credits_set)
+
+        # Compare semesters
+        semester_sets = [{semester["name"] for semester in plan["semesters"]} for plan in comparison_result["plans"]]
+        common_semesters = set.intersection(*semester_sets)
+        unique_semesters = set.union(*semester_sets) - common_semesters
+        comparison_result["differences"]["semesters"] = list(unique_semesters)
+
+        # Compare courses
+        course_sets = [{course["code"] for semester in plan["semesters"] for course in semester["courses"]} for plan in comparison_result["plans"]]
+        common_courses = set.intersection(*course_sets)
+        unique_courses = set.union(*course_sets) - common_courses
+        comparison_result["differences"]["courses"] = list(unique_courses)
+
+    return comparison_result
