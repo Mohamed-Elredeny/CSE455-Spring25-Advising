@@ -1,4 +1,3 @@
-
 import {useState} from 'react'
 import * as Yup from 'yup'
 import clsx from 'clsx'
@@ -8,6 +7,8 @@ import {getUserByToken, login} from '../core/_requests'
 import {toAbsoluteUrl} from '../../../../_metronic/helpers'
 import {useAuth} from '../core/Auth'
 
+const APP_ENV = import.meta.env.VITE_APP_ENV;
+const isDevelopment = () => APP_ENV === 'development';
 
 const loginSchema = Yup.object().shape({
   email: Yup.string()
@@ -22,8 +23,8 @@ const loginSchema = Yup.object().shape({
 })
 
 const initialValues = {
-  email: '',
-  password: '',
+  email: isDevelopment() ? 'admin@demo.com' : '',
+  password: isDevelopment() ? 'admin' : '',
 }
 
 /*
@@ -44,10 +45,8 @@ export function Login() {
       try {
         const {data: auth} = await login(values.email, values.password)
         saveAuth(auth)
-        // const {data: user} = await getUserByToken(auth.api_token)
-        const { access , refresh } = auth;
-        console.log(auth)
-        setCurrentUser(refresh)
+        const {data: user} = await getUserByToken(auth.api_token)
+        setCurrentUser(user)
       } catch (error) {
         console.error(error)
         saveAuth(undefined)
@@ -64,15 +63,13 @@ export function Login() {
       onSubmit={formik.handleSubmit}
       noValidate
       id='kt_login_signin_form'
-      method='post'
-      
     >
       {/* begin::Heading */}
       <div className='text-center mb-11'>
         <h1 className='text-gray-900 fw-bolder mb-3'>Sign In</h1>
-        <div className='text-gray-500 fw-semibold fs-6'>Your Social Campaigns</div>
+        <div className='text-gray-500 fw-semibold fs-6'>Enter your details to login</div>
       </div>
-      {/* begin::Heading */}
+      {/* end::Heading */}
 
       {/* begin::Login options */}
       <div className='row g-3 mb-9'>
@@ -129,14 +126,14 @@ export function Login() {
         <div className='mb-lg-15 alert alert-danger'>
           <div className='alert-text font-weight-bold'>{formik.status}</div>
         </div>
-      ) : (
+      ) : isDevelopment() ? (
         <div className='mb-10 bg-light-info p-8 rounded'>
           <div className='text-info'>
-            Use account <strong>admin@demo.com</strong> and password <strong>demo</strong> to
+            Use account <strong>admin@demo.com</strong> and password <strong>admin</strong> to
             continue.
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* begin::Form group */}
       <div className='fv-row mb-8'>
