@@ -1,0 +1,6 @@
+course_code,title,description,credits,prerequisites
+CSE101,Introduction to Computer Science,Basic concepts of computer science and programming,4,
+CSE201,Data Structures,Study of fundamental data structures and algorithms,4,CSE101
+CSE301,Software Engineering,Principles and practices of software development,4,CSE201
+MATH101,Calculus I,Introduction to differential and integral calculus,4,
+MATH201,Linear Algebra,Study of vector spaces and linear transformations,4,MATH101 
