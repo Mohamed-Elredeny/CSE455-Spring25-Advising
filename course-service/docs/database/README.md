@@ -11,6 +11,10 @@ The CSE455-Spring25-Advising service uses PostgreSQL as its primary database and
 - Indexes
 - Caching strategy
 
+## ERD
+
+![Database ERD](erd.svg)
+
 ## Schema
 
 ### Tables
