@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {AuthModel} from './_models'
 import axios from 'axios'
 

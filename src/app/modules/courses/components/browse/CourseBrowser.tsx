@@ -1,8 +1,12 @@
-import {FC, useState, useEffect} from 'react'
+import {FC, useState, useEffect, useCallback} from 'react'
 import {useNavigate} from 'react-router-dom'
 import {Course, Category} from '../../core/_models'
 import {getAllCourses, getAllCategories, getCoursesByLevel, getCoreCourses} from '../../core/_requests'
 import {KTCard, KTCardBody} from '../../../../../_metronic/helpers'
+
+interface ApiError {
+  message: string;
+}
 
 const CourseBrowser: FC = () => {
   const navigate = useNavigate()
@@ -16,24 +20,7 @@ const CourseBrowser: FC = () => {
     type: 'all',
   })
 
-  useEffect(() => {
-    loadCategories()
-    loadCourses()
-  }, [])
-
-  const loadCategories = async () => {
-    try {
-      const response = await getAllCategories()
-      setCategories(response.data)
-      setError(null)
-    } catch (err: any) {
-      console.error('Error loading categories:', err)
-      setError(err.message || 'Failed to load categories')
-      setCategories([])
-    }
-  }
-
-  const loadCourses = async () => {
+  const loadCourses = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -47,18 +34,37 @@ const CourseBrowser: FC = () => {
       }
       setCourses(response.data)
       setError(null)
-    } catch (err: any) {
-      console.error('Error loading courses:', err)
-      setError(err.message || 'Failed to load courses')
+    } catch (err: unknown) {
+      const error = err as ApiError
+      console.error('Error loading courses:', error)
+      setError(error.message || 'Failed to load courses')
       setCourses([])
     } finally {
       setLoading(false)
+    }
+  }, [filter])
+
+  useEffect(() => {
+    loadCategories()
+    loadCourses()
+  }, [loadCourses])
+
+  const loadCategories = async () => {
+    try {
+      const response = await getAllCategories()
+      setCategories(response.data)
+      setError(null)
+    } catch (err: unknown) {
+      const error = err as ApiError
+      console.error('Error loading categories:', error)
+      setError(error.message || 'Failed to load categories')
+      setCategories([])
     }
   }
 
   useEffect(() => {
     loadCourses()
-  }, [filter])
+  }, [filter, loadCourses])
 
   const handleFilterChange = (key: string, value: string) => {
     setFilter((prev) => ({...prev, [key]: value}))
