@@ -59,7 +59,7 @@ export function AsideMenuMain() {
       </AsideMenuItemWithSub>
       <div className='menu-item'>
         <div className='menu-content pt-8 pb-2'>
-          <span className='menu-section text-muted text-uppercase fs-8 ls-1'>Apps</span>
+          <span className='menu-section text-muted text-uppercase fs-8 ls-1'>Services</span>
         </div>
       </div>
       <AsideMenuItemWithSub to='/apps/chat' title='Chat' icon='message-text-2'>
@@ -75,23 +75,6 @@ export function AsideMenuMain() {
         <AsideMenuItem to='/courses/categories' title='Categories' hasBullet={true} />
         <AsideMenuItem to='/courses/compare' title='Compare Courses' hasBullet={true} />
       </AsideMenuItemWithSub>
-      <div className='menu-item'>
-        <div className='menu-content'>
-          <div className='separator mx-1 my-4'></div>
-        </div>
-      </div>
-      <div className='menu-item'>
-        <a
-          target='_blank'
-          className='menu-link'
-          href={import.meta.env.VITE_APP_PREVIEW_DOCS_URL + '/changelog'}
-        >
-          <span className='menu-icon'>
-            <KTIcon iconName='document' className='fs-2' />
-          </span>
-          <span className='menu-title'>Changelog {import.meta.env.VITE_APP_VERSION}</span>
-        </a>
-      </div>
     </>
   )
 }

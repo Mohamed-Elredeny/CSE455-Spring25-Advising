@@ -5,7 +5,7 @@ import noUiSlider, {target} from 'nouislider'
 import {useLayout} from '../../core'
 import {KTIcon} from '../../../helpers'
 import {DefaultTitle} from './page-title/DefaultTitle'
-import {ThemeModeSwitcher} from '../../../partials'
+import {ThemeModeSwitcher} from '../../../partials/layout/theme-mode/ThemeModeSwitcher'
 
 const HeaderToolbar = () => {
   const {classes} = useLayout()
