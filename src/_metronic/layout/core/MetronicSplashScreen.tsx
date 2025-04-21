@@ -8,6 +8,7 @@ import React, {
   useState,
 } from 'react'
 import {WithChildren} from '../../helpers'
+import {toAbsoluteUrl} from '../../helpers'
 
 const MetronicSplashScreenContext = createContext<Dispatch<SetStateAction<number>> | undefined>(
   undefined
@@ -18,10 +19,12 @@ const MetronicSplashScreenProvider: FC<WithChildren> = ({children}) => {
   const visible = count > 0
 
   useEffect(() => {
+    // Ensure loading state is properly set on mount
+    document.body.classList.add('page-loading')
+
     // Show SplashScreen
     if (visible) {
       document.body.classList.remove('page-loading')
-
       return () => {
         document.body.classList.add('page-loading')
       }
@@ -47,31 +50,14 @@ const MetronicSplashScreenProvider: FC<WithChildren> = ({children}) => {
   )
 }
 
-const LayoutSplashScreen: FC<{visible?: boolean}> = ({visible = true}) => {
-  // Everything are ready - remove splashscreen
-  const setCount = useContext(MetronicSplashScreenContext)
-
-  useEffect(() => {
-    if (!visible) {
-      return
-    }
-
-    if (setCount) {
-      setCount((prev) => {
-        return prev + 1
-      })
-    }
-
-    return () => {
-      if (setCount) {
-        setCount((prev) => {
-          return prev - 1
-        })
-      }
-    }
-  }, [setCount, visible])
-
-  return null
+const LayoutSplashScreen: FC = () => {
+  return (
+    <div id="splash-screen" className="splash-screen">
+      <img src={toAbsoluteUrl('media/logos/aiu-logo.png')} className="dark-logo" alt="AIU logo" />
+      <img src={toAbsoluteUrl('media/logos/aiu-logo.png')} className="light-logo" alt="AIU logo" />
+      <span>Loading ...</span>
+    </div>
+  )
 }
 
 export {MetronicSplashScreenProvider, LayoutSplashScreen}
