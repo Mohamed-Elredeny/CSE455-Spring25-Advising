@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { checkGraduationStatus } from '../Api/index';
 import { KTIcon } from '../../../../../_metronic/helpers';
 
@@ -17,46 +17,32 @@ interface GraduationStatusData {
   can_graduate: boolean;
 }
 
-interface ApiError {
-  response?: {
-    data?: {
-      message?: string;
-    };
-  };
-  message: string;
-}
-
-interface ApiResponse {
-  data: GraduationStatusData;
-}
-
 const GraduationStatus: React.FC<GraduationStatusProps> = ({ studentId }) => {
   const [status, setStatus] = useState<GraduationStatusData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleCheckStatus = useCallback(async () => {
-    if (!studentId) return;
-    try {
-      setLoading(true);
-      const response = (await checkGraduationStatus(studentId)) as ApiResponse;
-      setStatus(response.data);
-      setError('');
-    } catch (err: unknown) {
-      const error = err as ApiError;
-      console.error('Error checking graduation status:', error);
-      setError(error.response?.data?.message || error.message || 'Failed to check graduation status');
-      setStatus(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [studentId]);
-
   useEffect(() => {
     if (studentId) {
       handleCheckStatus();
     }
-  }, [studentId, handleCheckStatus]);
+  }, [studentId]);
+
+  const handleCheckStatus = async () => {
+    if (!studentId) return;
+    try {
+      setLoading(true);
+      const response = await checkGraduationStatus(studentId);
+      setStatus(response.data);
+      setError('');
+    } catch (err: any) {
+      console.error('Error checking graduation status:', err);
+      setError(err.response?.data?.message || 'Failed to check graduation status');
+      setStatus(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className='card'>
