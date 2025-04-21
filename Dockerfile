@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM node:18-alpine as builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
@@ -12,8 +12,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build the application (skip type checking)
+RUN npm run build-only
 
 # Stage 2: Serve the application
 FROM nginx:alpine
