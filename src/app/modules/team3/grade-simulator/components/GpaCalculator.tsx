@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { calculateCGPA, getGpaRules } from '../Api';
+import { calculateCGPA, getGpaRules } from '../Api/index';
 import { KTIcon } from '../../../../../_metronic/helpers';
-
 interface GpaRule {
   letter_grade: string;
   gpa_points: number;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { checkGraduationStatus } from '../Api';
+import { checkGraduationStatus } from '../Api/index';
 import { KTIcon } from '../../../../../_metronic/helpers';
 
 interface GraduationStatusProps {
