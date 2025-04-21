@@ -17,11 +17,11 @@ export function HeaderWrapper() {
       {/* begin::Brand */}
       <div className='header-brand'>
         {/* begin::Logo */}
-        <Link to='/'>
+        <Link to='/' className='d-flex align-items-center'>
           <img
             alt='Logo'
             src={toAbsoluteUrl('media/logos/aiu-logo.png')}
-            className='h-25px h-lg-30px'
+            className='h-45px h-lg-50px ms-3'
           />
         </Link>
         {/* end::Logo */}
