@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { checkGraduationStatus } from '../Api/index';
 import { KTIcon } from '../../../../../_metronic/helpers';
 
@@ -22,27 +22,29 @@ const GraduationStatus: React.FC<GraduationStatusProps> = ({ studentId }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (studentId) {
-      handleCheckStatus();
-    }
-  }, [studentId]);
-
-  const handleCheckStatus = async () => {
+  const handleCheckStatus = useCallback(async () => {
     if (!studentId) return;
     try {
       setLoading(true);
       const response = await checkGraduationStatus(studentId);
-      setStatus(response.data);
+      if (response?.data) {
+        setStatus(response.data as GraduationStatusData);
+      }
       setError('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error checking graduation status:', err);
-      setError(err.response?.data?.message || 'Failed to check graduation status');
+      setError(err instanceof Error ? err.message : 'Failed to check graduation status');
       setStatus(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [studentId]);
+
+  useEffect(() => {
+    if (studentId) {
+      handleCheckStatus();
+    }
+  }, [studentId, handleCheckStatus]);
 
   return (
     <div className='card'>

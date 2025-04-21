@@ -33,10 +33,15 @@ const GpaSimulatorPage: FC = () => {
           setError('No CGPA data available for this student');
           setCurrentCgpa(null);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error calculating CGPA:', error);
-        if (error.response?.status === 404) {
-          setError('Student not found. Please check the Student ID');
+        if (error instanceof Error && 'response' in error) {
+          const axiosError = error as { response?: { status?: number } };
+          if (axiosError.response?.status === 404) {
+            setError('Student not found. Please check the Student ID');
+          } else {
+            setError('Failed to calculate CGPA. Please try again later.');
+          }
         } else {
           setError('Failed to calculate CGPA. Please try again later.');
         }
