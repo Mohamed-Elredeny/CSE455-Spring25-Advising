@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.university.registration.model.Course;
@@ -16,6 +17,7 @@ import com.university.registration.repository.CourseRepository;
 import com.university.registration.repository.RegistrationPeriodRepository;
 import com.university.registration.repository.RegistrationRepository;
 import com.university.registration.repository.StudentRepository;
+import com.university.registration.events.RegistrationEvent;
 
 @Service
 public class RegistrationService {
@@ -34,6 +36,9 @@ public class RegistrationService {
 
     @Autowired
     private RegistrationPeriodRepository registrationPeriodRepository;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     private static final int FULL_LOAD_CREDITS = 18;
     private static final int HALF_LOAD_CREDITS = 9;
@@ -73,7 +78,12 @@ public class RegistrationService {
         registration.setSemester(semester);
         registration.setStatus(RegistrationStatus.PENDING);
 
-        return registrationRepository.save(registration);
+        Registration saved = registrationRepository.save(registration);
+
+        // Publish registration event
+        eventPublisher.publishEvent(new RegistrationEvent(this, saved, "REGISTERED"));
+
+        return saved;
     }
 
     // ✅ Admin: Approve or Reject Registration
@@ -83,6 +93,9 @@ public class RegistrationService {
 
         registration.setStatus(status);
         Registration updated = registrationRepository.save(registration);
+
+        // Publish status update event
+        eventPublisher.publishEvent(new RegistrationEvent(this, updated, "STATUS_UPDATED"));
 
         // If a registration was rejected or canceled, check waitlist
         if (status == RegistrationStatus.REJECTED) {
@@ -150,7 +163,12 @@ public class RegistrationService {
         registration.setStatusUpdateDate(LocalDateTime.now());
         registration.setUpdatedBy(cancelledBy);
 
-        return registrationRepository.save(registration);
+        Registration cancelled = registrationRepository.save(registration);
+
+        // Publish cancellation event
+        eventPublisher.publishEvent(new RegistrationEvent(this, cancelled, "CANCELLED"));
+
+        return cancelled;
     }
 
     // ✅ Get Registration History
@@ -163,4 +181,3 @@ public class RegistrationService {
         return registrationPeriodRepository.findFirstByIsActiveTrueOrderByStartDateDesc()
                 .orElseThrow(() -> new RuntimeException("No active registration period found"));
     }
-}

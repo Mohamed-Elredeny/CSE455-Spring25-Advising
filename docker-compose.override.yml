@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  registration-frontend:
+    build:
+      context: ./frontend/team2/registration
+    container_name: registration-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - registration-service

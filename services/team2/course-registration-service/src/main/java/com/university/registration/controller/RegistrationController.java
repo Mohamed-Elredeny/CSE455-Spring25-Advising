@@ -19,14 +19,19 @@ import com.university.registration.model.RegistrationPeriod;
 import com.university.registration.model.RegistrationStatus;
 import com.university.registration.service.RegistrationService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/registrations")
+@Tag(name = "Registration Controller", description = "APIs for managing course registrations")
 public class RegistrationController {
 
     @Autowired
     private RegistrationService registrationService;
 
     // ✅ Student Course Registration
+    @Operation(summary = "Register a student for a course in a semester")
     @PostMapping("/register")
     public Registration registerStudent(@RequestParam Long studentId,
             @RequestParam Long courseId,
@@ -35,6 +40,7 @@ public class RegistrationController {
     }
 
     // ✅ Admin: Approve or Reject a Registration
+    @Operation(summary = "Update the status of a registration (approve or reject)")
     @PutMapping("/{registrationId}/status")
     public Registration updateRegistrationStatus(@PathVariable Long registrationId,
             @RequestParam RegistrationStatus status) {
@@ -42,12 +48,14 @@ public class RegistrationController {
     }
 
     // ✅ Generate Student Timetable
+    @Operation(summary = "Generate the timetable for a student")
     @GetMapping("/{studentId}/timetable")
     public List<Registration> getStudentTimetable(@PathVariable Long studentId) {
         return registrationService.generateTimetable(studentId);
     }
 
     // ✅ Batch Registration
+    @Operation(summary = "Batch register multiple registrations")
     @PostMapping("/batch")
     public ResponseEntity<?> batchRegister(@RequestBody List<Registration> registrations) {
         try {
@@ -59,6 +67,7 @@ public class RegistrationController {
     }
 
     // ✅ Cancel Registration
+    @Operation(summary = "Cancel a registration")
     @DeleteMapping("/{registrationId}")
     public ResponseEntity<?> cancelRegistration(@PathVariable Long registrationId,
             @RequestParam String cancelledBy) {
@@ -71,12 +80,14 @@ public class RegistrationController {
     }
 
     // ✅ Get Registration History
+    @Operation(summary = "Get registration history for a student")
     @GetMapping("/history/{studentId}")
     public List<Registration> getRegistrationHistory(@PathVariable Long studentId) {
         return registrationService.getRegistrationHistory(studentId);
     }
 
     // ✅ Get Current Registration Period
+    @Operation(summary = "Get the current registration period")
     @GetMapping("/periods/current")
     public RegistrationPeriod getCurrentRegistrationPeriod() {
         return registrationService.getCurrentRegistrationPeriod();

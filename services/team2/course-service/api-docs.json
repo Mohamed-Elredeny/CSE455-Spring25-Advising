@@ -1,0 +1,1924 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Course Management API",
+        "description": "API for managing university courses and sections",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/courses/": {
+            "post": {
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Create Course",
+                "description": "Create a new course\n\n- **course_id**: Unique identifier for the course\n- **title**: Title of the course\n- **description**: Description of the course\n- **instructor**: Course instructor name\n- **credits**: Number of credits\n- **department**: Department offering the course\n- **is_core**: Whether it's a core course\n- **level**: Course level (100, 200, etc.)\n- **prerequisites**: List of prerequisite course IDs\n- **categories**: List of category names\n- **sections**: List of sections for this course",
+                "operationId": "create_course_courses__post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CourseCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Course"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 404 Create Course Courses  Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "409": {
+                        "description": "Course already exists",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "error",
+                                    "code": 409,
+                                    "message": "Course already exists",
+                                    "details": {
+                                        "course_id": "CS101"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Create Course Courses  Post"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Read Courses",
+                "description": "Get all courses with pagination\n\n- **skip**: Number of records to skip\n- **limit**: Maximum number of records to return",
+                "operationId": "read_courses_courses__get",
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Course"
+                                    },
+                                    "title": "Response Read Courses Courses  Get"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 404 Read Courses Courses  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Read Courses Courses  Get"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Read Courses Courses  Get"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Read Courses Courses  Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/{course_id}": {
+            "get": {
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Read Course",
+                "description": "Get a specific course by ID\n\n- **course_id**: ID of the course to retrieve",
+                "operationId": "read_course_courses__course_id__get",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Course Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Course"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Course not found",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "error",
+                                    "code": 404,
+                                    "message": "Course not found",
+                                    "details": {
+                                        "course_id": "UNKNOWN101"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Read Course Courses  Course Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Read Course Courses  Course Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Read Course Courses  Course Id  Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Update Course",
+                "description": "Update a course\n\n- **course_id**: ID of the course to update\n- **course**: Updated course data",
+                "operationId": "update_course_courses__course_id__put",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Course Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CourseCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Course"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Course not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Update Course Courses  Course Id  Put"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Update Course Courses  Course Id  Put"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Delete Course",
+                "description": "Delete a course\n\n- **course_id**: ID of the course to delete",
+                "operationId": "delete_course_courses__course_id__delete",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Course Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "404": {
+                        "description": "Course not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Delete Course Courses  Course Id  Delete"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Delete Course Courses  Course Id  Delete"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Delete Course Courses  Course Id  Delete"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/search/": {
+            "get": {
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Search Courses",
+                "description": "Search for courses based on various criteria.\n\n- **query**: The search term\n- **search_by**: Field to search in (all, title, description, instructor, department, course_id, category)",
+                "operationId": "search_courses_courses_search__get",
+                "parameters": [
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Query"
+                        }
+                    },
+                    {
+                        "name": "search_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "default": "all",
+                            "title": "Search By"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Course"
+                                    },
+                                    "title": "Response Search Courses Courses Search  Get"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 404 Search Courses Courses Search  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Search Courses Courses Search  Get"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Search Courses Courses Search  Get"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Search Courses Courses Search  Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/by-category/{category_name}": {
+            "get": {
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Get Courses By Category",
+                "description": "Get all courses in a specific category\n\n- **category_name**: Name of the category to filter by\n- **skip**: Number of records to skip\n- **limit**: Maximum number of records to return",
+                "operationId": "get_courses_by_category_courses_by_category__category_name__get",
+                "parameters": [
+                    {
+                        "name": "category_name",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Category Name"
+                        }
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Course"
+                                    },
+                                    "title": "Response Get Courses By Category Courses By Category  Category Name  Get"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Get Courses By Category Courses By Category  Category Name  Get"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Get Courses By Category Courses By Category  Category Name  Get"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Get Courses By Category Courses By Category  Category Name  Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/core/": {
+            "get": {
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Get Core Courses",
+                "description": "Get all core courses\n\n- **skip**: Number of records to skip\n- **limit**: Maximum number of records to return",
+                "operationId": "get_core_courses_courses_core__get",
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Course"
+                                    },
+                                    "title": "Response Get Core Courses Courses Core  Get"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 404 Get Core Courses Courses Core  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Get Core Courses Courses Core  Get"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Get Core Courses Courses Core  Get"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Get Core Courses Courses Core  Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/by-level/{level}": {
+            "get": {
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Get Courses By Level",
+                "description": "Get all courses at a specific level\n\n- **level**: Course level (e.g., 100, 200, etc.)\n- **skip**: Number of records to skip\n- **limit**: Maximum number of records to return",
+                "operationId": "get_courses_by_level_courses_by_level__level__get",
+                "parameters": [
+                    {
+                        "name": "level",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Level"
+                        }
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Course"
+                                    },
+                                    "title": "Response Get Courses By Level Courses By Level  Level  Get"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 404 Get Courses By Level Courses By Level  Level  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid level value"
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Get Courses By Level Courses By Level  Level  Get"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Get Courses By Level Courses By Level  Level  Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/{course_id}/dependencies": {
+            "get": {
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Get Course Dependencies",
+                "description": "Get the dependency tree for a course\n\n- **course_id**: ID of the course to get dependencies for",
+                "operationId": "get_course_dependencies_courses__course_id__dependencies_get",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Course Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response Get Course Dependencies Courses  Course Id  Dependencies Get"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Course not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Get Course Dependencies Courses  Course Id  Dependencies Get"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Get Course Dependencies Courses  Course Id  Dependencies Get"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Get Course Dependencies Courses  Course Id  Dependencies Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/{course_id}/check-prerequisites": {
+            "post": {
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Check Prerequisites",
+                "description": "Check if all prerequisites for a course have been met\n\n- **course_id**: ID of the course to check prerequisites for\n- **completed_courses**: List of completed course IDs",
+                "operationId": "check_prerequisites_courses__course_id__check_prerequisites_post",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Course Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "title": "Completed Courses"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response Check Prerequisites Courses  Course Id  Check Prerequisites Post"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Course not found"
+                    },
+                    "422": {
+                        "description": "Invalid input"
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Check Prerequisites Courses  Course Id  Check Prerequisites Post"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Check Prerequisites Courses  Course Id  Check Prerequisites Post"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/{course_id}/sections/": {
+            "post": {
+                "tags": [
+                    "sections"
+                ],
+                "summary": "Create Section",
+                "description": "Create a new section for a course\n\n- **course_id**: ID of the course to add section to\n- **section_id**: Unique identifier for the section\n- **instructor**: Section instructor\n- **schedule_day**: Day of the week (Monday, Tuesday, etc.)\n- **schedule_time**: Time of the class\n- **capacity**: Maximum number of students",
+                "operationId": "create_section_courses__course_id__sections__post",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Course Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SectionCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Section"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Course not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "409": {
+                        "description": "Section already exists"
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Create Section Courses  Course Id  Sections  Post"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "sections"
+                ],
+                "summary": "Read Sections",
+                "description": "Get all sections for a course with pagination\n\n- **course_id**: ID of the course to get sections for\n- **skip**: Number of records to skip\n- **limit**: Maximum number of records to return",
+                "operationId": "read_sections_courses__course_id__sections__get",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Course Id"
+                        }
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Section"
+                                    },
+                                    "title": "Response Read Sections Courses  Course Id  Sections  Get"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Course not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Read Sections Courses  Course Id  Sections  Get"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Read Sections Courses  Course Id  Sections  Get"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Read Sections Courses  Course Id  Sections  Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/{course_id}/sections/{section_id}": {
+            "get": {
+                "tags": [
+                    "sections"
+                ],
+                "summary": "Read Section",
+                "description": "Get a specific section by ID\n\n- **course_id**: ID of the course\n- **section_id**: ID of the section to retrieve",
+                "operationId": "read_section_courses__course_id__sections__section_id__get",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Course Id"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Section Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Section"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Section or course not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Read Section Courses  Course Id  Sections  Section Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Read Section Courses  Course Id  Sections  Section Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Read Section Courses  Course Id  Sections  Section Id  Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "sections"
+                ],
+                "summary": "Update Section",
+                "description": "Update a section\n\n- **course_id**: ID of the course\n- **section_id**: ID of the section to update\n- **section**: Updated section data",
+                "operationId": "update_section_courses__course_id__sections__section_id__put",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Course Id"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Section Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SectionCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Section"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Section or course not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Update Section Courses  Course Id  Sections  Section Id  Put"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Update Section Courses  Course Id  Sections  Section Id  Put"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "sections"
+                ],
+                "summary": "Delete Section",
+                "description": "Delete a section\n\n- **course_id**: ID of the course\n- **section_id**: ID of the section to delete",
+                "operationId": "delete_section_courses__course_id__sections__section_id__delete",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Course Id"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Section Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "404": {
+                        "description": "Section or course not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Delete Section Courses  Course Id  Sections  Section Id  Delete"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Delete Section Courses  Course Id  Sections  Section Id  Delete"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Delete Section Courses  Course Id  Sections  Section Id  Delete"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/": {
+            "post": {
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Create Category",
+                "description": "Create a new category\n\n- **name**: Category name\n- **description**: Category description",
+                "operationId": "create_category_categories__post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CategoryCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Category"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 404 Create Category Categories  Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "409": {
+                        "description": "Category already exists"
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Create Category Categories  Post"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Read Categories",
+                "description": "Get all categories with pagination\n\n- **skip**: Number of records to skip\n- **limit**: Maximum number of records to return",
+                "operationId": "read_categories_categories__get",
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Category"
+                                    },
+                                    "title": "Response Read Categories Categories  Get"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 404 Read Categories Categories  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Read Categories Categories  Get"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Read Categories Categories  Get"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Read Categories Categories  Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/{category_id}": {
+            "get": {
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Read Category",
+                "description": "Get a category by ID\n\n- **category_id**: ID of the category to retrieve",
+                "operationId": "read_category_categories__category_id__get",
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Category Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Category"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Read Category Categories  Category Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Read Category Categories  Category Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Read Category Categories  Category Id  Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Update Category",
+                "description": "Update a category by ID\n\n- **category_id**: ID of the category to update\n- **category**: Updated category data",
+                "operationId": "update_category_categories__category_id__put",
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Category Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CategoryCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Category"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Update Category Categories  Category Id  Put"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Update Category Categories  Category Id  Put"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Delete Category",
+                "description": "Delete a category by ID\n\n- **category_id**: ID of the category to delete",
+                "operationId": "delete_category_categories__category_id__delete",
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Category Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 422 Delete Category Categories  Category Id  Delete"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 409 Delete Category Categories  Category Id  Delete"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response 500 Delete Category Categories  Category Id  Delete"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "summary": "Read Root",
+                "operationId": "read_root__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Category": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "description",
+                    "id"
+                ],
+                "title": "Category"
+            },
+            "CategoryCreate": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "description"
+                ],
+                "title": "CategoryCreate"
+            },
+            "Course": {
+                "properties": {
+                    "course_id": {
+                        "type": "string",
+                        "title": "Course Id"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "instructor": {
+                        "type": "string",
+                        "title": "Instructor"
+                    },
+                    "credits": {
+                        "type": "integer",
+                        "title": "Credits"
+                    },
+                    "department": {
+                        "type": "string",
+                        "title": "Department"
+                    },
+                    "is_core": {
+                        "type": "boolean",
+                        "title": "Is Core",
+                        "default": false
+                    },
+                    "level": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Level"
+                    },
+                    "prerequisites": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Prerequisites",
+                        "default": []
+                    },
+                    "sections": {
+                        "items": {
+                            "$ref": "#/components/schemas/Section"
+                        },
+                        "type": "array",
+                        "title": "Sections",
+                        "default": []
+                    },
+                    "categories": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Categories",
+                        "default": []
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "course_id",
+                    "title",
+                    "description",
+                    "instructor",
+                    "credits",
+                    "department"
+                ],
+                "title": "Course"
+            },
+            "CourseCreate": {
+                "properties": {
+                    "course_id": {
+                        "type": "string",
+                        "title": "Course Id"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "instructor": {
+                        "type": "string",
+                        "title": "Instructor"
+                    },
+                    "credits": {
+                        "type": "integer",
+                        "title": "Credits"
+                    },
+                    "department": {
+                        "type": "string",
+                        "title": "Department"
+                    },
+                    "is_core": {
+                        "type": "boolean",
+                        "title": "Is Core",
+                        "default": false
+                    },
+                    "level": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Level"
+                    },
+                    "prerequisites": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Prerequisites",
+                        "default": []
+                    },
+                    "sections": {
+                        "items": {
+                            "$ref": "#/components/schemas/SectionCreate"
+                        },
+                        "type": "array",
+                        "title": "Sections",
+                        "default": []
+                    },
+                    "categories": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Categories",
+                        "default": []
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "course_id",
+                    "title",
+                    "description",
+                    "instructor",
+                    "credits",
+                    "department"
+                ],
+                "title": "CourseCreate"
+            },
+            "Section": {
+                "properties": {
+                    "section_id": {
+                        "type": "string",
+                        "title": "Section Id"
+                    },
+                    "instructor": {
+                        "type": "string",
+                        "title": "Instructor"
+                    },
+                    "capacity": {
+                        "type": "integer",
+                        "title": "Capacity"
+                    },
+                    "schedule_day": {
+                        "type": "string",
+                        "title": "Schedule Day"
+                    },
+                    "schedule_time": {
+                        "type": "string",
+                        "title": "Schedule Time"
+                    },
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "course_id": {
+                        "type": "string",
+                        "title": "Course Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "section_id",
+                    "instructor",
+                    "capacity",
+                    "schedule_day",
+                    "schedule_time",
+                    "id",
+                    "course_id"
+                ],
+                "title": "Section"
+            },
+            "SectionCreate": {
+                "properties": {
+                    "section_id": {
+                        "type": "string",
+                        "title": "Section Id"
+                    },
+                    "instructor": {
+                        "type": "string",
+                        "title": "Instructor"
+                    },
+                    "capacity": {
+                        "type": "integer",
+                        "title": "Capacity"
+                    },
+                    "schedule_day": {
+                        "type": "string",
+                        "title": "Schedule Day"
+                    },
+                    "schedule_time": {
+                        "type": "string",
+                        "title": "Schedule Time"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "section_id",
+                    "instructor",
+                    "capacity",
+                    "schedule_day",
+                    "schedule_time"
+                ],
+                "title": "SectionCreate"
+            }
+        }
+    }
+}

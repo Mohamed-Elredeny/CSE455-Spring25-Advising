@@ -29,6 +29,6 @@ public class Student {
     private double gpa;  // ✅ Determines full-load or half-load registration
 
     public double getGpa() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return gpa;
     }
 }

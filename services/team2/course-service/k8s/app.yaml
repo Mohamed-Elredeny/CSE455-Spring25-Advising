@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: course-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: course-api
+  template:
+    metadata:
+      labels:
+        app: course-api
+    spec:
+      containers:
+      - name: course-api
+        image: course-api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: course-api-config
+        command: ["uvicorn"]
+        args: ["app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: course-api
+spec:
+  selector:
+    app: course-api
+  ports:
+  - port: 80
+    targetPort: 8000
+  type: LoadBalancer 

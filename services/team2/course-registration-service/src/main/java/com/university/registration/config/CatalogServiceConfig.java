@@ -9,8 +9,9 @@ public class CatalogServiceConfig {
 
     @Bean
     public WebClient catalogServiceWebClient() {
+        String catalogServiceUrl = System.getenv().getOrDefault("CATALOG_SERVICE_URL", "http://localhost:8000");
         return WebClient.builder()
-                .baseUrl("http://localhost:8000") // Catalog Service URL
+                .baseUrl(catalogServiceUrl) // Catalog Service URL
                 .defaultHeader("Accept", "application/json")
                 .defaultHeader("Content-Type", "application/json")
                 .build();

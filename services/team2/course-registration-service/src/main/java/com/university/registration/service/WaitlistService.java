@@ -5,18 +5,23 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.university.registration.model.Course;
 import com.university.registration.model.Student;
 import com.university.registration.model.WaitlistEntry;
 import com.university.registration.repository.WaitlistRepository;
+import com.university.registration.events.WaitlistPromotionEvent;
 
 @Service
 public class WaitlistService {
 
     @Autowired
     private WaitlistRepository waitlistRepository;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     // Add student to waitlist
     public WaitlistEntry addToWaitlist(Student student, Course course) {
@@ -70,7 +75,8 @@ public class WaitlistService {
         entry.setNotified(true);
         entry.setNotificationSentAt(LocalDateTime.now());
         waitlistRepository.save(entry);
-        // TODO: Implement actual notification logic
+        // Publish event for notification
+        eventPublisher.publishEvent(new WaitlistPromotionEvent(this, entry));
     }
 
     // Get waitlist entry by ID

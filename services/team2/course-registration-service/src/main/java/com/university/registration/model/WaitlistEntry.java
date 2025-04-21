@@ -42,4 +42,28 @@ public class WaitlistEntry {
     public void setStudent(Student student) {
         this.student = student;
     }
+
+    public void setCourse(Course course) {
+        this.course = course;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public void setPosition(Integer position) {
+        this.position = position;
+    }
+
+    public void setNotified(Boolean notified) {
+        this.notified = notified;
+    }
+
+    public void setNotificationSentAt(LocalDateTime notificationSentAt) {
+        this.notificationSentAt = notificationSentAt;
+    }
+
+    public Course getCourse() {
+        return this.course;
+    }
 }
