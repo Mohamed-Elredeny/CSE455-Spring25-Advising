@@ -2,9 +2,11 @@ name: Lint and Type Check
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - '**'
   pull_request:
-    branches: [ main ]
+    branches:
+      - '**'
 
 jobs:
   lint:
