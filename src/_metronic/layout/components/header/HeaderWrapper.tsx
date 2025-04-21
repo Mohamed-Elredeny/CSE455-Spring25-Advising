@@ -1,4 +1,3 @@
-
 import clsx from 'clsx'
 import {Link} from 'react-router-dom'
 import {KTIcon, toAbsoluteUrl} from '../../../helpers'
@@ -21,8 +20,8 @@ export function HeaderWrapper() {
         <Link to='/'>
           <img
             alt='Logo'
-            src={toAbsoluteUrl('media/logos/default-dark.svg')}
-            className='h-25px h-lg-25px'
+            src={toAbsoluteUrl('media/logos/aiu-logo.png')}
+            className='h-25px h-lg-30px'
           />
         </Link>
         {/* end::Logo */}
