@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {AuthModel} from './_models'
+import axios from 'axios'
 
 const AUTH_LOCAL_STORAGE_KEY = 'kt-auth-react-v'
 const getAuth = (): AuthModel | undefined => {
@@ -48,18 +49,55 @@ const removeAuth = () => {
   }
 }
 
-export function setupAxios(axios: any) {
-  axios.defaults.headers.Accept = 'application/json'
-  axios.interceptors.request.use(
-    (config: {headers: {Authorization: string}}) => {
-      const auth = getAuth()
-      if (auth && auth.api_token) {
-        config.headers.Authorization = `Bearer ${auth.api_token}`
-      }
+export function setupAxios() {
+  axios.defaults.baseURL = import.meta.env.VITE_APP_API_URL
+  axios.defaults.headers.common['Accept'] = 'application/json'
+  axios.defaults.headers.common['Content-Type'] = 'application/json'
+  axios.defaults.withCredentials = true // Enable sending cookies with requests
 
+  // Add request interceptor
+  axios.interceptors.request.use(
+    (config) => {
+      // You can add auth token here if needed
       return config
     },
-    (err: any) => Promise.reject(err)
+    (error) => {
+      return Promise.reject(error)
+    }
+  )
+
+  // Add response interceptor
+  axios.interceptors.response.use(
+    (response) => {
+      return response
+    },
+    (error) => {
+      if (error.response) {
+        // Server responded with error status
+        console.error('Response Error:', error.response.data)
+        return Promise.reject({
+          status: error.response.status,
+          message: error.response.data.message || 'An error occurred',
+          data: error.response.data
+        })
+      } else if (error.request) {
+        // Request was made but no response
+        console.error('Request Error:', error.request)
+        return Promise.reject({
+          status: 0,
+          message: 'Could not connect to the server',
+          data: null
+        })
+      } else {
+        // Something else happened
+        console.error('Error:', error.message)
+        return Promise.reject({
+          status: 0,
+          message: error.message,
+          data: null
+        })
+      }
+    }
   )
 }
 

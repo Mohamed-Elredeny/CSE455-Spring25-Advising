@@ -9,6 +9,7 @@ const CourseBrowser: FC = () => {
   const [courses, setCourses] = useState<Course[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState({
     level: 'all',
     category: 'all',
@@ -24,13 +25,17 @@ const CourseBrowser: FC = () => {
     try {
       const response = await getAllCategories()
       setCategories(response.data)
-    } catch (error) {
-      console.error('Error loading categories:', error)
+      setError(null)
+    } catch (err: any) {
+      console.error('Error loading categories:', err)
+      setError(err.message || 'Failed to load categories')
+      setCategories([])
     }
   }
 
   const loadCourses = async () => {
     setLoading(true)
+    setError(null)
     try {
       let response
       if (filter.level !== 'all') {
@@ -41,8 +46,11 @@ const CourseBrowser: FC = () => {
         response = await getAllCourses()
       }
       setCourses(response.data)
-    } catch (error) {
-      console.error('Error loading courses:', error)
+      setError(null)
+    } catch (err: any) {
+      console.error('Error loading courses:', err)
+      setError(err.message || 'Failed to load courses')
+      setCourses([])
     } finally {
       setLoading(false)
     }
@@ -66,10 +74,10 @@ const CourseBrowser: FC = () => {
             onChange={(e) => handleFilterChange('level', e.target.value)}
           >
             <option value='all'>All Levels</option>
-            <option value='100'>100 Level</option>
-            <option value='200'>200 Level</option>
-            <option value='300'>300 Level</option>
-            <option value='400'>400 Level</option>
+            <option value='1'>100 Level</option>
+            <option value='2'>200 Level</option>
+            <option value='3'>300 Level</option>
+            <option value='4'>400 Level</option>
           </select>
 
           <select
@@ -96,11 +104,26 @@ const CourseBrowser: FC = () => {
         </div>
       </div>
 
+      {error && (
+        <div className='alert alert-danger mb-5'>
+          <div className='d-flex flex-column'>
+            <h4 className='mb-1 text-danger'>Error</h4>
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
       <div className='row g-6 g-xl-9'>
         {loading ? (
           <div className='d-flex justify-content-center w-100 py-10'>
             <div className='spinner-border text-primary' role='status'>
               <span className='visually-hidden'>Loading...</span>
+            </div>
+          </div>
+        ) : courses.length === 0 && !error ? (
+          <div className='col-12'>
+            <div className='alert alert-info'>
+              No courses found. Try adjusting your filters.
             </div>
           </div>
         ) : (
@@ -123,13 +146,13 @@ const CourseBrowser: FC = () => {
                   <div className='d-flex flex-wrap'>
                     <button
                       className='btn btn-sm btn-light-primary me-2 mb-2'
-                      onClick={() => navigate(`/courses/prerequisites/${course.course_id}`)}
+                      onClick={() => navigate(`/academics/courses/prerequisites/${course.course_id}`)}
                     >
                       View Prerequisites
                     </button>
                     <button
                       className='btn btn-sm btn-light-info mb-2'
-                      onClick={() => navigate(`/courses/compare?course=${course.course_id}`)}
+                      onClick={() => navigate(`/academics/courses/compare?course=${course.course_id}`)}
                     >
                       Compare
                     </button>

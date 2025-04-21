@@ -9,56 +9,62 @@ import {CourseComparison} from './components/comparison/CourseComparison'
 
 const CourseModule: FC = () => {
   return (
-    <>
-      <Routes>
-        <Route element={<Navigate to='/courses/browse' />} path='/' />
-        <Route
-          path='browse'
-          element={
-            <>
-              <PageTitle>Course Browser</PageTitle>
-              <CourseBrowser />
-            </>
-          }
-        />
-        <Route
-          path='categories'
-          element={
-            <>
-              <PageTitle>Course Categories</PageTitle>
-              <CourseCategories />
-            </>
-          }
-        />
-        <Route
-          path='search'
-          element={
-            <>
-              <PageTitle>Advanced Search</PageTitle>
-              <CourseSearch />
-            </>
-          }
-        />
-        <Route
-          path='prerequisites/:courseId'
-          element={
-            <>
-              <PageTitle>Prerequisite Visualization</PageTitle>
-              <PrerequisiteVisualizer />
-            </>
-          }
-        />
-        <Route
-          path='compare'
-          element={
-            <>
-              <PageTitle>Course Comparison</PageTitle>
-              <CourseComparison />
-            </>
-          }
-        />
-      </Routes>
-    </>
+    <Routes>
+      {/* Default redirect */}
+      <Route index element={<Navigate to='browse' />} />
+
+      {/* Course Discovery */}
+      <Route
+        path='browse'
+        element={
+          <>
+            <PageTitle>Course Catalog</PageTitle>
+            <CourseBrowser />
+          </>
+        }
+      />
+      <Route
+        path='categories'
+        element={
+          <>
+            <PageTitle>Course Categories</PageTitle>
+            <CourseCategories />
+          </>
+        }
+      />
+      <Route
+        path='search'
+        element={
+          <>
+            <PageTitle>Course Search</PageTitle>
+            <CourseSearch />
+          </>
+        }
+      />
+
+      {/* Course Analysis */}
+      <Route
+        path='prerequisites/:courseId'
+        element={
+          <>
+            <PageTitle>Course Prerequisites</PageTitle>
+            <PrerequisiteVisualizer />
+          </>
+        }
+      />
+      <Route
+        path='compare'
+        element={
+          <>
+            <PageTitle>Compare Courses</PageTitle>
+            <CourseComparison />
+          </>
+        }
+      />
+
+      {/* Fallback */}
+      <Route path='*' element={<Navigate to='browse' />} />
+    </Routes>
   )
 }
 
