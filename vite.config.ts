@@ -7,5 +7,6 @@ export default defineConfig({
   base: "/metronic8/react/demo8/",
   build: {
     chunkSizeWarningLimit: 3000,
+    sourcemap: true
   },
 })
