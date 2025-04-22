@@ -7,11 +7,10 @@ const NoteDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [appointment, setAppointment] = useState(null);
-  const [formData, setFormData] = useState({
-    summary: "",
-    action_items: [],
-    follow_up: ""
-  });
+  const [loading, setLoading] = useState(true);
+  const [notesText, setNotesText] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchAppointment = async () => {
@@ -22,21 +21,26 @@ const NoteDetail = () => {
           }
         });
         setAppointment(res.data);
-        setFormData(res.data.notes || {});
+        setNotesText(res.data.notes?.content || "");
       } catch (error) {
-        console.error("Error fetching appointment:", error);
-        navigate("/notes");
+        console.error("Fetch error:", error);
+        setError("Failed to load appointment");
+      } finally {
+        setLoading(false);
       }
     };
     fetchAppointment();
-  }, [id, navigate]);
+  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSaving(true);
+    setError(null);
+    
     try {
-      await axios.patch(
+      const response = await axios.patch(
         `http://localhost:8000/api/appointments/${id}/notes`,
-        formData,
+        { content: notesText },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -44,56 +48,58 @@ const NoteDetail = () => {
           }
         }
       );
+      
+      console.log("Save successful:", response.data);
       navigate("/notes");
     } catch (error) {
-      console.error("Error updating notes:", error);
+      console.error("Save error:", error.response?.data || error.message);
+      setError(error.response?.data?.message || "Failed to save notes");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  if (!appointment) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading">Loading...</div>;
+  if (!appointment) return <div className="error">Appointment not found</div>;
 
   return (
     <div className="note-detail-container">
-      <h2>Meeting Notes</h2>
+      <h2>{appointment.notes ? "Edit Notes" : "Add Notes"}</h2>
       <div className="note-meta">
-        <p>Advisor: {appointment.advisor_name}</p>
+        <p>With: {appointment.advisor_name}</p>
         <p>Date: {new Date(appointment.date_time).toLocaleString()}</p>
       </div>
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Summary:</label>
-          <input
-            type="text"
-            value={formData.summary || ""}
-            onChange={(e) => setFormData({...formData, summary: e.target.value})}
+          <textarea
+            value={notesText}
+            onChange={(e) => setNotesText(e.target.value)}
+            placeholder="Write your notes here..."
+            className="notes-textarea"
+            required
           />
         </div>
 
-        <div className="form-group">
-          <label>Action Items (comma separated):</label>
-          <input
-            type="text"
-            value={formData.action_items?.join(", ") || ""}
-            onChange={(e) => 
-              setFormData({
-                ...formData,
-                action_items: e.target.value.split(",").map(item => item.trim())
-              })
-            }
-          />
-        </div>
+        {error && <div className="error-message">{error}</div>}
 
-        <div className="form-group">
-          <label>Follow-up Date:</label>
-          <input
-            type="datetime-local"
-            value={formData.follow_up || ""}
-            onChange={(e) => setFormData({...formData, follow_up: e.target.value})}
-          />
+        <div className="button-group">
+          <button 
+            type="submit" 
+            className="save-btn"
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save Notes"}
+          </button>
+          <button 
+            type="button" 
+            className="cancel-btn"
+            onClick={() => navigate("/notes")}
+            disabled={isSaving}
+          >
+            Cancel
+          </button>
         </div>
-
-        <button type="submit" className="save-btn">Save Notes</button>
       </form>
     </div>
   );

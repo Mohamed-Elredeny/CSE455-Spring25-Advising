@@ -6,6 +6,7 @@ import "./Notes.css";
 const NotesList = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showWithoutNotes, setShowWithoutNotes] = useState(false);
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -15,7 +16,7 @@ const NotesList = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`
           }
         });
-        setAppointments(res.data.filter(appt => appt.notes)); // Only show appointments with notes
+        setAppointments(res.data);
       } catch (error) {
         console.error("Error fetching appointments:", error);
       } finally {
@@ -25,20 +26,40 @@ const NotesList = () => {
     fetchAppointments();
   }, []);
 
+  const filteredAppointments = showWithoutNotes
+    ? appointments
+    : appointments.filter(appt => appt.notes);
+
   if (loading) return <div className="loading">Loading...</div>;
 
   return (
     <div className="notes-container">
       <h1>Meeting Notes</h1>
+      
+      <div className="notes-controls">
+        <button 
+          onClick={() => setShowWithoutNotes(!showWithoutNotes)}
+          className="toggle-btn"
+        >
+          {showWithoutNotes ? "Hide Meetings Without Notes" : "Show All Meetings"}
+        </button>
+      </div>
+
       <div className="notes-grid">
-        {appointments.map((appt) => (
+        {filteredAppointments.map((appt) => (
           <div key={appt._id} className="note-card">
-            <h3>{appt.notes?.summary || "No title"}</h3>
-            <p>With: {appt.advisor_name}</p>
-            <p>Date: {new Date(appt.date_time).toLocaleString()}</p>
-            <Link to={`/notes/${appt._id}`} className="view-btn">
-              View Details
-            </Link>
+            <div className="note-content">
+              <h3>{appt.notes?.summary || "No notes yet"}</h3>
+              <div className="note-meta">
+                <p><strong>With:</strong> {appt.advisor_name}</p>
+                <p><strong>Date:</strong> {new Date(appt.date_time).toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="note-actions">
+              <Link to={`/notes/${appt._id}`} className="view-btn">
+                {appt.notes ? "View/Edit Notes" : "Add Notes"}
+              </Link>
+            </div>
           </div>
         ))}
       </div>

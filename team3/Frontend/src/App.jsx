@@ -4,11 +4,10 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Appointments from "./pages/Appointments";
 import NotFound from "./pages/NotFound";
-import NotesList from "./pages/NotesList";  
+import NotesList from "./pages/NotesList";
+import NoteDetail from "./pages/NoteDetail";  // Make sure to import this
 import StudentAnalytics from "./pages/StudentAnalytics";
 import AdvisorAnalytics from './pages/AdvisorAnalytics';
-
-
 
 const App = () => {
   return (
@@ -17,10 +16,11 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/appointments" element={<Appointments />} />
-        <Route path="*" element={<NotFound />} />
         <Route path="/notes" element={<NotesList />} />
+        <Route path="/notes/:id" element={<NoteDetail />} />  {/* Add this route */}
         <Route path="/analytics" element={<StudentAnalytics />} />
         <Route path="/advisor-analytics" element={<AdvisorAnalytics />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
