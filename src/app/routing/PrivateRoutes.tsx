@@ -13,6 +13,7 @@ const PrivateRoutes = () => {
   const AccountPage = lazy(() => import('../modules/accounts/AccountPage'))
   const GpaSimulatorPage = lazy(() => import('../modules/team3/grade-simulator/pages/GpaSimulatorPage'))
   const CourseModule = lazy(() => import('../modules/courses/CourseModule'))
+  const AcademicPlansModule = lazy(() => import('../modules/academic-plans/PlanModule'))
 
   // Admin Features
   const UsersPage = lazy(() => import('../modules/apps/user-management/UsersPage'))
@@ -33,6 +34,7 @@ const PrivateRoutes = () => {
         {/* Academic Features */}
         <Route path='academics'>
           <Route path='courses/*' element={<SuspensedView><CourseModule /></SuspensedView>} />
+          <Route path='academic-plans/*' element={<SuspensedView><AcademicPlansModule /></SuspensedView>} />
           <Route path='gpa-simulator' element={<SuspensedView><GpaSimulatorPage /></SuspensedView>} />
         </Route>
 

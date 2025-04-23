@@ -28,6 +28,14 @@ export function AsideMenuMain() {
         <AsideMenuItem to='/academics/courses/compare' title='Compare Courses' hasBullet={true} />
       </AsideMenuItemWithSub>
 
+    {/* Plans Managment */}
+      <AsideMenuItemWithSub to='/academics/academic-plans' title='Academic Plans' icon='calendar'>
+        <AsideMenuItem to='/academics/academic-plans/browse' title='Program Plans' hasBullet={true} />
+        <AsideMenuItem to='/academics/academic-plans/allPlans' title='Student Plans' hasBullet={true} />
+        <AsideMenuItem to='/academics/academic-plans/revision' title='Plans revision' hasBullet={true} />
+        <AsideMenuItem to='/academics/academic-plans/comparison' title='Compare Plans' hasBullet={true} />
+      </AsideMenuItemWithSub>
+
       <AsideMenuItem 
         to='/academics/gpa-simulator' 
         icon='calculator' 
