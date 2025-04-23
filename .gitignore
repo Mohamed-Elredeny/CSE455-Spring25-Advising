@@ -34,6 +34,8 @@ build/
 **/build
 public/
 **/public/
+src/_metronic/
+**/src/_metronic/
 
 # Logs
 logs
