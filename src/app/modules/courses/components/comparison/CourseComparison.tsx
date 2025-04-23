@@ -1,19 +1,23 @@
 import {FC, useState, useEffect, useCallback} from 'react'
-import {useSearchParams} from 'react-router-dom'
+import {useNavigate, useSearchParams} from 'react-router-dom'
 import {Course} from '../../core/_models'
 import {getCourseById, searchCourses} from '../../core/_requests'
 import {KTCard, KTCardBody} from '../../../../../_metronic/helpers'
+import debounce from 'lodash/debounce'
 
 interface ApiError {
   message: string;
 }
 
 const CourseComparison: FC = () => {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [selectedCourses, setSelectedCourses] = useState<Course[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Course[]>([])
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const loadCourse = useCallback(async (courseId: string) => {
     try {
@@ -24,6 +28,9 @@ const CourseComparison: FC = () => {
     } catch (err: unknown) {
       const error = err as ApiError
       console.error('Error loading course:', error)
+      setError(error.message || 'Failed to load course')
+    } finally {
+      setInitialLoading(false)
     }
   }, [selectedCourses])
 
@@ -31,23 +38,38 @@ const CourseComparison: FC = () => {
     const courseId = searchParams.get('course')
     if (courseId) {
       loadCourse(courseId)
+    } else {
+      setInitialLoading(false)
     }
   }, [searchParams, loadCourse])
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return
+  const performSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      return
+    }
 
     setLoading(true)
+    setError(null)
     try {
       const response = await searchCourses(searchQuery)
       setSearchResults(response.data)
     } catch (err: unknown) {
       const error = err as ApiError
       console.error('Error searching courses:', error)
+      setError(error.message || 'Failed to search courses')
+      setSearchResults([])
     } finally {
       setLoading(false)
     }
   }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedSearch = useCallback(debounce(() => performSearch(), 300), [searchQuery])
+
+  useEffect(() => {
+    debouncedSearch()
+  }, [searchQuery, debouncedSearch])
 
   const addCourse = (course: Course) => {
     if (!selectedCourses.find((c) => c.course_id === course.course_id)) {
@@ -61,8 +83,25 @@ const CourseComparison: FC = () => {
     setSelectedCourses((prev) => prev.filter((c) => c.course_id !== courseId))
   }
 
+  if (initialLoading) {
+    return (
+      <div className='d-flex justify-content-center align-items-center min-h-300px'>
+        <div className='spinner-border text-primary' role='status'>
+          <span className='visually-hidden'>Loading...</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
+      <div className='d-flex justify-content-between align-items-center mb-8'>
+        <h1 className='fs-2x fw-bold text-gray-800 mb-0'>Compare Courses</h1>
+        <button className='btn btn-light' onClick={() => navigate('../browse')}>
+          Back to Course Browser
+        </button>
+      </div>
+
       <KTCard className='mb-8'>
         <KTCardBody>
           <div className='d-flex flex-column flex-md-row gap-5'>
@@ -73,19 +112,28 @@ const CourseComparison: FC = () => {
                 placeholder='Search courses to compare...'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
-            <button className='btn btn-primary' onClick={handleSearch} disabled={loading}>
-              {loading ? (
-                <span className='spinner-border spinner-border-sm' role='status' aria-hidden='true'></span>
-              ) : (
-                'Add Course'
-              )}
-            </button>
           </div>
 
-          {searchResults.length > 0 && (
+          {error && (
+            <div className='alert alert-danger mt-8'>
+              <div className='d-flex flex-column'>
+                <h4 className='mb-1 text-danger'>Error</h4>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
+
+          {loading && (
+            <div className='d-flex justify-content-center w-100 py-10'>
+              <div className='spinner-border text-primary' role='status'>
+                <span className='visually-hidden'>Loading...</span>
+              </div>
+            </div>
+          )}
+
+          {searchResults.length > 0 && !loading && (
             <div className='bg-light rounded p-4 mt-4'>
               <div className='fs-5 fw-bold mb-4'>Search Results</div>
               <div className='table-responsive'>
@@ -108,8 +156,11 @@ const CourseComparison: FC = () => {
                           <button
                             className='btn btn-sm btn-light-primary'
                             onClick={() => addCourse(course)}
+                            disabled={selectedCourses.some((c) => c.course_id === course.course_id)}
                           >
-                            Add to Compare
+                            {selectedCourses.some((c) => c.course_id === course.course_id)
+                              ? 'Already Added'
+                              : 'Add to Compare'}
                           </button>
                         </td>
                       </tr>
@@ -122,7 +173,7 @@ const CourseComparison: FC = () => {
         </KTCardBody>
       </KTCard>
 
-      {selectedCourses.length > 0 && (
+      {selectedCourses.length > 0 ? (
         <div className='row g-5 g-xl-8'>
           {selectedCourses.map((course) => (
             <div key={course.course_id} className='col-xl-6'>
@@ -183,6 +234,13 @@ const CourseComparison: FC = () => {
               </KTCard>
             </div>
           ))}
+        </div>
+      ) : (
+        <div className='alert alert-info'>
+          <div className='d-flex flex-column'>
+            <h4 className='mb-1 text-info'>No Courses Selected</h4>
+            <span>Search for courses above to start comparing them.</span>
+          </div>
         </div>
       )}
     </>
