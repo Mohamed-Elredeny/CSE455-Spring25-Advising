@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+**/node_modules/
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.*
+**/.env
+**/.env.*
+
+# macOS system files
+.DS_Store
+**/.DS_Store
+**/__MACOSX/
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build directories
+dist/
+build/
+**/dist
+**/build
+public/
+**/public/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Uploads directory
+uploads/
+**/uploads/
+backend/uploads/
+**/backend/uploads/
