@@ -50,7 +50,7 @@ const ChatPage = () => {
             </>
           }
         />
-        <Route index element={<Navigate to='/apps/chat/private-chat' />} />
+        <Route index element={<Navigate to='/features/chat/private-chat' />} />
       </Route>
     </Routes>
   )

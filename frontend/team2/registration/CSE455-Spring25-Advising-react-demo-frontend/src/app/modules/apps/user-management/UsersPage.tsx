@@ -31,7 +31,7 @@ const UsersPage = () => {
           }
         />
       </Route>
-      <Route index element={<Navigate to='/apps/user-management/users' />} />
+      <Route index element={<Navigate to='/admin/users' />} />
     </Routes>
   )
 }

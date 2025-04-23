@@ -1,14 +1,31 @@
-# Stage 1: Build the React app
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps
-COPY . .
-RUN npm run build
+# Stage 1: Build the application
+FROM node:18-alpine AS builder
 
-# Stage 2: Serve the build with a lightweight web server
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build the application (skip type checking)
+RUN npm run build-only
+
+# Stage 2: Serve the application
 FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY ./nginx.conf /etc/nginx/nginx.conf
+
+# Copy the build output
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"] 

@@ -29,12 +29,13 @@ body.page-loading {
   color: #5e6278;
   transition: none !important;
   -webkit-font-smoothing: antialiased;
+  margin-top: 20px;
 }
 
 .page-loading .splash-screen img {
   margin-left: calc(100vw - 100%);
-  margin-bottom: 30px;
-  height: 30px !important;
+  height: 150px !important;
+  width: auto;
 }
 
 html[data-bs-theme='dark'] .page-loading .splash-screen {

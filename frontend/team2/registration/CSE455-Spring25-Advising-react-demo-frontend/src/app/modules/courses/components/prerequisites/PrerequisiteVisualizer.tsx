@@ -1,4 +1,4 @@
-import {FC, useEffect, useState} from 'react'
+import {FC, useEffect, useState, useCallback} from 'react'
 import {useParams} from 'react-router-dom'
 import {Course, PrerequisiteNode} from '../../core/_models'
 import {getCourseById, getCourseDependencies} from '../../core/_requests'
@@ -10,13 +10,7 @@ const PrerequisiteVisualizer: FC = () => {
   const [dependencies, setDependencies] = useState<PrerequisiteNode | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (courseId) {
-      loadCourseData()
-    }
-  }, [courseId])
-
-  const loadCourseData = async () => {
+  const loadCourseData = useCallback(async () => {
     if (!courseId) return
     setLoading(true)
     try {
@@ -31,7 +25,13 @@ const PrerequisiteVisualizer: FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [courseId])
+
+  useEffect(() => {
+    if (courseId) {
+      loadCourseData()
+    }
+  }, [courseId, loadCourseData])
 
   const renderPrerequisiteTree = (node: PrerequisiteNode, level: number = 0) => {
     return (

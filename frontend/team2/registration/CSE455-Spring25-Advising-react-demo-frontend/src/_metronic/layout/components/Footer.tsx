@@ -14,7 +14,7 @@ const Footer: FC = () => {
         <div className='text-gray-900 order-2 order-md-1'>
           <span className='text-muted fw-bold me-2'>{new Date().getFullYear()} &copy;</span>
           <a href='#' className='text-gray-800 text-hover-primary'>
-            Keenthemes
+            Alamein International University
           </a>
         </div>
         {/* end::Copyright */}

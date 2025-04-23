@@ -56,7 +56,9 @@ public class Course {
             return "No schedule available";
         }
         return sections.stream()
-                .map(s -> s.getScheduleDay() + " " + s.getScheduleTime())
+                .map(s -> {
+                    return s.getScheduleDay() + " " + s.getScheduleTime();
+                })
                 .findFirst()
                 .orElse("No schedule available");
     }
@@ -80,5 +82,13 @@ public class Course {
         private int capacity;
         private String scheduleDay;
         private String scheduleTime;
+
+        public String getScheduleDay() {
+            return scheduleDay;
+        }
+
+        public String getScheduleTime() {
+            return scheduleTime;
+        }
     }
 }

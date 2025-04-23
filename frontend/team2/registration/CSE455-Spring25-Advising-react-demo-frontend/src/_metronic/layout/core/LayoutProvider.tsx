@@ -1,5 +1,4 @@
 /* eslint-disable react-refresh/only-export-components */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {FC, createContext, useContext, useState, useEffect} from 'react'
 import {DefaultLayoutConfig} from './DefaultLayoutConfig'
 import {

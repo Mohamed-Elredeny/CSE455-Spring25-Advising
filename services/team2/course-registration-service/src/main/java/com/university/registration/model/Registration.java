@@ -29,11 +29,11 @@ public class Registration {
     private Long registrationId;
 
     @ManyToOne
-    @JoinColumn(name = "student_id")
+    @JoinColumn(name = "student_id", referencedColumnName = "id")
     private Student student;
 
     @ManyToOne
-    @JoinColumn(name = "course_id")
+    @JoinColumn(name = "course_id", referencedColumnName = "id")
     private Course course;
 
     private String semester;

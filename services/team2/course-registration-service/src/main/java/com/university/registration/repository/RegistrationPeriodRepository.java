@@ -9,4 +9,6 @@ import com.university.registration.model.RegistrationPeriod;
 public interface RegistrationPeriodRepository extends JpaRepository<RegistrationPeriod, Long> {
 
     Optional<RegistrationPeriod> findFirstByIsActiveTrueOrderByStartDateDesc();
+
+    Optional<RegistrationPeriod> findFirstByIsActiveTrueOrderByPriorityLevelAsc();
 }

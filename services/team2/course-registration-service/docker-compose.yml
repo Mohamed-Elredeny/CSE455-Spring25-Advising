@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  registration-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: registration-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://registration-db:3306/university_advising
+      - SPRING_DATASOURCE_USERNAME=registration_user
+      - SPRING_DATASOURCE_PASSWORD=secure_password
+    depends_on:
+      - registration-db
+
+  registration-db:
+    image: mysql:8.0
+    container_name: registration-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: university_advising
+      MYSQL_USER: registration_user
+      MYSQL_PASSWORD: secure_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - registration-db-data:/var/lib/mysql
+      - ./db-setup.sql:/docker-entrypoint-initdb.d/db-setup.sql:ro
+
+volumes:
+  registration-db-data:

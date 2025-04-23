@@ -30,10 +30,24 @@ import {AuthProvider, setupAxios} from './app/modules/auth'
  *
  * @see https://github.com/axios/axios#interceptors
  */
-setupAxios(axios)
+
+// Initialize axios with proper configuration
+setupAxios()
+
+// Initialize Chart.js
 Chart.register(...registerables)
 
-const queryClient = new QueryClient()
+// Configure React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+})
+
 const container = document.getElementById('root')
 if (container) {
   createRoot(container).render(

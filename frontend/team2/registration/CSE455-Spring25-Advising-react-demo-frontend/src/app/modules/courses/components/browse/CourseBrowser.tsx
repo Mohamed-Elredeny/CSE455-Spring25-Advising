@@ -1,36 +1,28 @@
-import {FC, useState, useEffect} from 'react'
+import {FC, useState, useEffect, useCallback} from 'react'
 import {useNavigate} from 'react-router-dom'
 import {Course, Category} from '../../core/_models'
 import {getAllCourses, getAllCategories, getCoursesByLevel, getCoreCourses} from '../../core/_requests'
 import {KTCard, KTCardBody} from '../../../../../_metronic/helpers'
+
+interface ApiError {
+  message: string;
+}
 
 const CourseBrowser: FC = () => {
   const navigate = useNavigate()
   const [courses, setCourses] = useState<Course[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState({
     level: 'all',
     category: 'all',
     type: 'all',
   })
 
-  useEffect(() => {
-    loadCategories()
-    loadCourses()
-  }, [])
-
-  const loadCategories = async () => {
-    try {
-      const response = await getAllCategories()
-      setCategories(response.data)
-    } catch (error) {
-      console.error('Error loading categories:', error)
-    }
-  }
-
-  const loadCourses = async () => {
+  const loadCourses = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       let response
       if (filter.level !== 'all') {
@@ -41,16 +33,38 @@ const CourseBrowser: FC = () => {
         response = await getAllCourses()
       }
       setCourses(response.data)
-    } catch (error) {
+      setError(null)
+    } catch (err: unknown) {
+      const error = err as ApiError
       console.error('Error loading courses:', error)
+      setError(error.message || 'Failed to load courses')
+      setCourses([])
     } finally {
       setLoading(false)
+    }
+  }, [filter])
+
+  useEffect(() => {
+    loadCategories()
+    loadCourses()
+  }, [loadCourses])
+
+  const loadCategories = async () => {
+    try {
+      const response = await getAllCategories()
+      setCategories(response.data)
+      setError(null)
+    } catch (err: unknown) {
+      const error = err as ApiError
+      console.error('Error loading categories:', error)
+      setError(error.message || 'Failed to load categories')
+      setCategories([])
     }
   }
 
   useEffect(() => {
     loadCourses()
-  }, [filter])
+  }, [filter, loadCourses])
 
   const handleFilterChange = (key: string, value: string) => {
     setFilter((prev) => ({...prev, [key]: value}))
@@ -66,10 +80,10 @@ const CourseBrowser: FC = () => {
             onChange={(e) => handleFilterChange('level', e.target.value)}
           >
             <option value='all'>All Levels</option>
-            <option value='100'>100 Level</option>
-            <option value='200'>200 Level</option>
-            <option value='300'>300 Level</option>
-            <option value='400'>400 Level</option>
+            <option value='1'>100 Level</option>
+            <option value='2'>200 Level</option>
+            <option value='3'>300 Level</option>
+            <option value='4'>400 Level</option>
           </select>
 
           <select
@@ -96,11 +110,26 @@ const CourseBrowser: FC = () => {
         </div>
       </div>
 
+      {error && (
+        <div className='alert alert-danger mb-5'>
+          <div className='d-flex flex-column'>
+            <h4 className='mb-1 text-danger'>Error</h4>
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
       <div className='row g-6 g-xl-9'>
         {loading ? (
           <div className='d-flex justify-content-center w-100 py-10'>
             <div className='spinner-border text-primary' role='status'>
               <span className='visually-hidden'>Loading...</span>
+            </div>
+          </div>
+        ) : courses.length === 0 && !error ? (
+          <div className='col-12'>
+            <div className='alert alert-info'>
+              No courses found. Try adjusting your filters.
             </div>
           </div>
         ) : (
@@ -123,13 +152,13 @@ const CourseBrowser: FC = () => {
                   <div className='d-flex flex-wrap'>
                     <button
                       className='btn btn-sm btn-light-primary me-2 mb-2'
-                      onClick={() => navigate(`/courses/prerequisites/${course.course_id}`)}
+                      onClick={() => navigate(`/academics/courses/prerequisites/${course.course_id}`)}
                     >
                       View Prerequisites
                     </button>
                     <button
                       className='btn btn-sm btn-light-info mb-2'
-                      onClick={() => navigate(`/courses/compare?course=${course.course_id}`)}
+                      onClick={() => navigate(`/academics/courses/compare?course=${course.course_id}`)}
                     >
                       Compare
                     </button>

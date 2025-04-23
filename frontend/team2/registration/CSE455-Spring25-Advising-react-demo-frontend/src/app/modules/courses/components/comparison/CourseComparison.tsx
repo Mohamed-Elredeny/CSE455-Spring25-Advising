@@ -1,8 +1,12 @@
-import {FC, useState, useEffect} from 'react'
+import {FC, useState, useEffect, useCallback} from 'react'
 import {useSearchParams} from 'react-router-dom'
 import {Course} from '../../core/_models'
 import {getCourseById, searchCourses} from '../../core/_requests'
 import {KTCard, KTCardBody} from '../../../../../_metronic/helpers'
+
+interface ApiError {
+  message: string;
+}
 
 const CourseComparison: FC = () => {
   const [searchParams] = useSearchParams()
@@ -11,23 +15,24 @@ const CourseComparison: FC = () => {
   const [searchResults, setSearchResults] = useState<Course[]>([])
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    const courseId = searchParams.get('course')
-    if (courseId) {
-      loadCourse(courseId)
-    }
-  }, [searchParams])
-
-  const loadCourse = async (courseId: string) => {
+  const loadCourse = useCallback(async (courseId: string) => {
     try {
       const response = await getCourseById(courseId)
       if (!selectedCourses.find((c) => c.course_id === courseId)) {
         setSelectedCourses((prev) => [...prev, response.data])
       }
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as ApiError
       console.error('Error loading course:', error)
     }
-  }
+  }, [selectedCourses])
+
+  useEffect(() => {
+    const courseId = searchParams.get('course')
+    if (courseId) {
+      loadCourse(courseId)
+    }
+  }, [searchParams, loadCourse])
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
@@ -36,7 +41,8 @@ const CourseComparison: FC = () => {
     try {
       const response = await searchCourses(searchQuery)
       setSearchResults(response.data)
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as ApiError
       console.error('Error searching courses:', error)
     } finally {
       setLoading(false)

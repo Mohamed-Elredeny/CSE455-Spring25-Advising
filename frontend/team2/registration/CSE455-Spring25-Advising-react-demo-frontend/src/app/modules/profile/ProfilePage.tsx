@@ -77,7 +77,7 @@ const ProfilePage = () => (
           </>
         }
       />
-      <Route index element={<Navigate to='/crafted/pages/profile/overview' />} />
+      <Route index element={<Navigate to='/profile/overview' />} />
     </Route>
   </Routes>
 )

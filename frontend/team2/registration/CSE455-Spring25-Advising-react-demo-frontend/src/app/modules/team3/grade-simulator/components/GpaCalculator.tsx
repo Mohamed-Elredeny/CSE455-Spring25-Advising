@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { calculateCGPA, getGpaRules } from '../Api';
+import { calculateCGPA, getGpaRules } from '../Api/index';
 import { KTIcon } from '../../../../../_metronic/helpers';
 
 interface GpaRule {
@@ -11,10 +11,10 @@ interface GpaRule {
 
 interface GpaCalculatorProps {
   studentId: string;
+  currentCgpa: number | null;
 }
 
-const GpaCalculator: React.FC<GpaCalculatorProps> = ({ studentId }) => {
-  const [currentCgpa, setCurrentCgpa] = useState<number | null>(null);
+const GpaCalculator: React.FC<GpaCalculatorProps> = ({ studentId, currentCgpa }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [gpaRules, setGpaRules] = useState<GpaRule[]>([]);
@@ -31,27 +31,6 @@ const GpaCalculator: React.FC<GpaCalculatorProps> = ({ studentId }) => {
     };
     fetchGpaRules();
   }, []);
-
-  useEffect(() => {
-    const fetchCgpa = async () => {
-      if (!studentId) return;
-      
-      try {
-        setLoading(true);
-        const response = await calculateCGPA(studentId);
-        setCurrentCgpa(response.data.cgpa);
-        setError('');
-      } catch (error) {
-        console.error('Error calculating CGPA:', error);
-        setError('Failed to calculate CGPA - Please check Student ID');
-        setCurrentCgpa(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCgpa();
-  }, [studentId]);
 
   return (
     <div className='card'>
@@ -79,11 +58,18 @@ const GpaCalculator: React.FC<GpaCalculatorProps> = ({ studentId }) => {
                 <h3 className='card-title fw-bold text-gray-800'>Current CGPA Calculator</h3>
               </div>
               <div className='card-body pt-1'>
-                {currentCgpa && (
+                {currentCgpa !== null ? (
                   <div className='alert alert-success mt-5'>
                     <div className='d-flex align-items-center'>
                       <KTIcon iconName='tick-circle' className='fs-2hx text-success me-3' />
-                      <span className='fw-bold'>Current CGPA: {currentCgpa}</span>
+                      <span className='fw-bold'>Current CGPA: {typeof currentCgpa === 'number' ? currentCgpa.toFixed(2) : 'N/A'}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className='alert alert-warning mt-5'>
+                    <div className='d-flex align-items-center'>
+                      <KTIcon iconName='warning-2' className='fs-2hx text-warning me-3' />
+                      <span className='fw-bold'>No CGPA data available</span>
                     </div>
                   </div>
                 )}

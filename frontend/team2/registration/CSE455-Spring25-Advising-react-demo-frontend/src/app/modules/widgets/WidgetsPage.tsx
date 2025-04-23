@@ -80,7 +80,7 @@ const WidgetsPage = () => {
             </>
           }
         />
-        <Route index element={<Navigate to='/crafted/widgets/lists' />} />
+        <Route index element={<Navigate to='/features/widgets/lists' />} />
       </Route>
     </Routes>
   )

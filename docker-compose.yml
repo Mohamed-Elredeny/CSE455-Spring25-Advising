@@ -1,78 +1,76 @@
-version: '3.8'
+
 
 services:
-  registration-service:
-    build: ./services/team2/course-registration-service
-    container_name: registration-service
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/registration_db
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=password
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - CATALOG_SERVICE_URL=http://catalog-service:8000
-    depends_on:
-      - mysql
-      - course-api
-
-  course-api:
-    build: ./catalog-service
-    container_name: catalog-service
+  course-service:
+    container_name: course-service
+    build:
+      context: ./course-service
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@course-db:5432/courses
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=courses
+      - DATABASE_URL=postgresql://user:password@postgres:5432/coursedb
+      # Add other environment variables as needed
     depends_on:
-      - course-db
+      - postgres
     networks:
-      - advising-net
+      - advising-network
 
-  course-db:
-    image: postgres:14
-    container_name: course-db
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=courses
+  registration-service:
+    container_name: registration-service
+    build:
+      context: ./services/team2/course-registration-service
+      dockerfile: Dockerfile
     ports:
-      - "5432:5432"
-    volumes:
-      - course_postgres_data:/var/lib/postgresql/data/
-    networks:
-      - advising-net
-
-  mysql:
-    image: mysql:8.0
-    container_name: mysql
+      - "8001:8001"
     environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=registration_db
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
+      - DATABASE_URL=mysql://user:password@mysql:3306/registrationdb
+      # Add other environment variables as needed
+    depends_on:
+      - mysql
     networks:
-      - advising-net
+      - advising-network
 
-  registration-frontend:
+  frontend:
+    container_name: advising-frontend
     build:
       context: ./frontend/team2/registration/CSE455-Spring25-Advising-react-demo-frontend
-    container_name: registration-frontend
+      dockerfile: Dockerfile
     ports:
       - "3000:80"
     depends_on:
+      - course-service
       - registration-service
     networks:
-      - advising-net
+      - advising-network
 
-volumes:
-  mysql_data:
-  course_postgres_data:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: coursedb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - advising-network
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: registrationdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - advising-network
 
 networks:
-  advising-net:
+  advising-network:
     driver: bridge
+
+volumes:
+  postgres-data:
+  mysql-data:
