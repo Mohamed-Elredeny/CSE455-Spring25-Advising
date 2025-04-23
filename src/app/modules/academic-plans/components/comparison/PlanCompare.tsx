@@ -7,7 +7,7 @@ const PlanComparison: FC = () => {
   const [searchQuery, setSearchQuery] = useState('') // Search input
   const [searchResults, setSearchResults] = useState<Plan[]>([]) // Search results
   const [selectedPlans, setSelectedPlans] = useState<Plan[]>([]) // Selected plans for comparison
-  const [comparisonResult, setComparisonResult] = useState<any | null>(null) // Comparison result from backend
+  const [comparisonResult, setComparisonResult] = useState<Record<string, unknown> | null>(null) // Comparison result from backend
   const [loading, setLoading] = useState(false) // Loading state
   const [error, setError] = useState<string | null>(null) // Error state
 

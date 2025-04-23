@@ -1,4 +1,4 @@
-import {FC, useEffect, useState} from 'react'
+import {FC, useEffect, useState, useCallback} from 'react'
 import {useParams, useNavigate} from 'react-router-dom'
 import {Plan} from '../../../core/_models'
 import {getAllPlans} from '../../../core/_requests'
@@ -12,7 +12,7 @@ const PlanDetails: FC = () => {
   const navigate = useNavigate() // For navigation
 
   // Fetch plan details
-  const loadPlanDetails = async () => {
+  const loadPlanDetails = useCallback( async () => {
     setLoading(true)
     setError(null)
     try {
@@ -29,7 +29,7 @@ const PlanDetails: FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  } ,[planId])
 
   // Approve the plan
   const handleApprove = () => {
