@@ -6,6 +6,8 @@ import {useLayout} from '../../core'
 import {KTIcon} from '../../../helpers'
 import {DefaultTitle} from './page-title/DefaultTitle'
 import {ThemeModeSwitcher} from '../../../partials/layout/theme-mode/ThemeModeSwitcher'
+import { Link } from 'react-router-dom'
+
 
 const HeaderToolbar = () => {
   const {classes} = useLayout()
@@ -120,6 +122,11 @@ const HeaderToolbar = () => {
               Quick Tools:
             </span>
             {/* end::Label */}
+            <span>
+              <a href='/admin' className='btn btn-sm btn-icon btn-icon-muted btn-active-icon-primary'>
+                <KTIcon iconName='notification' className='fs-1' />
+              </a>
+            </span>
 
             {/* begin::Actions */}
             <div className='d-flex'>

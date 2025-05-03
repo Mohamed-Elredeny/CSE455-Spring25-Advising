@@ -6,6 +6,8 @@ import {DashboardWrapper} from '../pages/dashboard/DashboardWrapper'
 import {getCSSVariableValue} from '../../_metronic/assets/ts/_utils'
 import {WithChildren} from '../../_metronic/helpers'
 import BuilderPageWrapper from '../pages/layout-builder/BuilderPageWrapper'
+import { Lazy } from 'yup'
+
 
 const PrivateRoutes = () => {
   // Core Features
@@ -14,6 +16,8 @@ const PrivateRoutes = () => {
   const GpaSimulatorPage = lazy(() => import('../modules/team3/grade-simulator/pages/GpaSimulatorPage'))
   const CourseModule = lazy(() => import('../modules/courses/CourseModule'))
   const AcademicPlansModule = lazy(() => import('../modules/academic-plans/PlanModule'))
+  const UserNotifications = lazy(() => import('../modules/team3/notification/pages/UserDashboard'))
+  const AdminNotifications = lazy(() => import('../modules/team3/notification/pages/AdminDashboard'))
 
   // Admin Features
   const UsersPage = lazy(() => import('../modules/apps/user-management/UsersPage'))
@@ -30,7 +34,7 @@ const PrivateRoutes = () => {
         <Route path='dashboard' element={<DashboardWrapper />} />
         <Route path='profile/*' element={<SuspensedView><ProfilePage /></SuspensedView>} />
         <Route path='account/*' element={<SuspensedView><AccountPage /></SuspensedView>} />
-        
+        <Route path="notifications/*" element={<SuspensedView><UserNotifications userId='student123' /></SuspensedView>} />
         {/* Academic Features */}
         <Route path='academics'>
           <Route path='courses/*' element={<SuspensedView><CourseModule /></SuspensedView>} />
@@ -41,6 +45,7 @@ const PrivateRoutes = () => {
         {/* Admin Routes */}
         <Route path='admin'>
           <Route path='users/*' element={<SuspensedView><UsersPage /></SuspensedView>} />
+          <Route path="/admin" element={<SuspensedView><AdminNotifications/></SuspensedView>} />
         </Route>
 
         {/* Optional Features */}
