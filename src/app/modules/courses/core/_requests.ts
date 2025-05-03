@@ -1,10 +1,10 @@
 import axios from 'axios'
-import {Course, CourseCreate, Category, Section} from './_models'
+import {Course, CourseCreate, Category, Section, PrerequisiteNode} from './_models'
 
-const API_URL = import.meta.env.VITE_APP_API_URL
+const COURSES_API_URL = import.meta.env.COURSES_API_URL || 'http://localhost:8000'
 
-export const COURSES_URL = `${API_URL}/courses`
-export const CATEGORIES_URL = `${API_URL}/categories`
+export const COURSES_URL = `${COURSES_API_URL}/courses`
+export const CATEGORIES_URL = `${COURSES_API_URL}/categories`
 
 // Course API calls
 export const getAllCourses = (skip = 0, limit = 100) => {
@@ -47,7 +47,7 @@ export const getCourseSections = (courseId: string, skip = 0, limit = 100) => {
 
 // Prerequisite API calls
 export const getCourseDependencies = (courseId: string) => {
-  return axios.get(`${COURSES_URL}/${courseId}/dependencies`)
+  return axios.get<PrerequisiteNode>(`${COURSES_URL}/${courseId}/dependencies`)
 }
 
 export const checkPrerequisites = (courseId: string, completedCourses: string[]) => {

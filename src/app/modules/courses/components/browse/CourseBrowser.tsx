@@ -1,7 +1,13 @@
 import {FC, useState, useEffect, useCallback} from 'react'
-import {useNavigate} from 'react-router-dom'
+import {useNavigate, useSearchParams} from 'react-router-dom'
 import {Course, Category} from '../../core/_models'
-import {getAllCourses, getAllCategories, getCoursesByLevel, getCoreCourses} from '../../core/_requests'
+import {
+  getAllCourses,
+  getAllCategories,
+  getCoursesByLevel,
+  getCoreCourses,
+  getCoursesByCategory,
+} from '../../core/_requests'
 import {KTCard, KTCardBody} from '../../../../../_metronic/helpers'
 
 interface ApiError {
@@ -10,13 +16,14 @@ interface ApiError {
 
 const CourseBrowser: FC = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [courses, setCourses] = useState<Course[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState({
     level: 'all',
-    category: 'all',
+    category: searchParams.get('category') || 'all',
     type: 'all',
   })
 
@@ -25,7 +32,9 @@ const CourseBrowser: FC = () => {
     setError(null)
     try {
       let response
-      if (filter.level !== 'all') {
+      if (filter.category !== 'all') {
+        response = await getCoursesByCategory(filter.category)
+      } else if (filter.level !== 'all') {
         response = await getCoursesByLevel(parseInt(filter.level))
       } else if (filter.type === 'core') {
         response = await getCoreCourses()
@@ -44,23 +53,20 @@ const CourseBrowser: FC = () => {
     }
   }, [filter])
 
-  useEffect(() => {
-    loadCategories()
-    loadCourses()
-  }, [loadCourses])
-
   const loadCategories = async () => {
     try {
       const response = await getAllCategories()
       setCategories(response.data)
-      setError(null)
     } catch (err: unknown) {
       const error = err as ApiError
       console.error('Error loading categories:', error)
-      setError(error.message || 'Failed to load categories')
       setCategories([])
     }
   }
+
+  useEffect(() => {
+    loadCategories()
+  }, [])
 
   useEffect(() => {
     loadCourses()
@@ -72,58 +78,69 @@ const CourseBrowser: FC = () => {
 
   return (
     <>
-      <div className='d-flex flex-wrap flex-stack pb-7'>
-        <div className='d-flex flex-wrap align-items-center my-1'>
-          <select
-            className='form-select form-select-sm form-select-solid w-125px me-2'
-            value={filter.level}
-            onChange={(e) => handleFilterChange('level', e.target.value)}
-          >
-            <option value='all'>All Levels</option>
-            <option value='1'>100 Level</option>
-            <option value='2'>200 Level</option>
-            <option value='3'>300 Level</option>
-            <option value='4'>400 Level</option>
-          </select>
-
-          <select
-            className='form-select form-select-sm form-select-solid w-125px me-2'
-            value={filter.category}
-            onChange={(e) => handleFilterChange('category', e.target.value)}
-          >
-            <option value='all'>All Categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.name}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className='form-select form-select-sm form-select-solid w-125px'
-            value={filter.type}
-            onChange={(e) => handleFilterChange('type', e.target.value)}
-          >
-            <option value='all'>All Courses</option>
-            <option value='core'>Core Courses</option>
-          </select>
-        </div>
-      </div>
-
-      {error && (
-        <div className='alert alert-danger mb-5'>
-          <div className='d-flex flex-column'>
-            <h4 className='mb-1 text-danger'>Error</h4>
-            <span>{error}</span>
+      <KTCard className='mb-8'>
+        <KTCardBody>
+          <div className='d-flex flex-column flex-md-row gap-5 mb-8'>
+            <div className='flex-grow-1'>
+              <label className='form-label'>Level</label>
+              <select
+                className='form-select form-select-solid'
+                value={filter.level}
+                onChange={(e) => handleFilterChange('level', e.target.value)}
+              >
+                <option value='all'>All Levels</option>
+                <option value='100'>100 Level</option>
+                <option value='200'>200 Level</option>
+                <option value='300'>300 Level</option>
+                <option value='400'>400 Level</option>
+              </select>
+            </div>
+            <div className='flex-grow-1'>
+              <label className='form-label'>Category</label>
+              <select
+                className='form-select form-select-solid'
+                value={filter.category}
+                onChange={(e) => handleFilterChange('category', e.target.value)}
+              >
+                <option value='all'>All Categories</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.name}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className='flex-grow-1'>
+              <label className='form-label'>Type</label>
+              <select
+                className='form-select form-select-solid'
+                value={filter.type}
+                onChange={(e) => handleFilterChange('type', e.target.value)}
+              >
+                <option value='all'>All Courses</option>
+                <option value='core'>Core Courses</option>
+              </select>
+            </div>
           </div>
-        </div>
-      )}
+
+          {error && (
+            <div className='alert alert-danger mb-8'>
+              <div className='d-flex flex-column'>
+                <h4 className='mb-1 text-danger'>Error</h4>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
+        </KTCardBody>
+      </KTCard>
 
       <div className='row g-6 g-xl-9'>
         {loading ? (
-          <div className='d-flex justify-content-center w-100 py-10'>
-            <div className='spinner-border text-primary' role='status'>
-              <span className='visually-hidden'>Loading...</span>
+          <div className='col-12'>
+            <div className='d-flex justify-content-center w-100 py-10'>
+              <div className='spinner-border text-primary' role='status'>
+                <span className='visually-hidden'>Loading...</span>
+              </div>
             </div>
           </div>
         ) : courses.length === 0 && !error ? (
@@ -148,17 +165,21 @@ const CourseBrowser: FC = () => {
                       <div className='fs-6 text-gray-800 fw-bold'>{course.credits}</div>
                       <div className='fw-semibold text-gray-400'>Credits</div>
                     </div>
+                    <div className='border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-2 mb-2'>
+                      <div className='fs-6 text-gray-800 fw-bold'>{course.instructor}</div>
+                      <div className='fw-semibold text-gray-400'>Instructor</div>
+                    </div>
                   </div>
                   <div className='d-flex flex-wrap'>
                     <button
                       className='btn btn-sm btn-light-primary me-2 mb-2'
-                      onClick={() => navigate(`/academics/courses/prerequisites/${course.course_id}`)}
+                      onClick={() => navigate(`../prerequisites/${course.course_id}`)}
                     >
                       View Prerequisites
                     </button>
                     <button
                       className='btn btn-sm btn-light-info mb-2'
-                      onClick={() => navigate(`/academics/courses/compare?course=${course.course_id}`)}
+                      onClick={() => navigate(`../compare?course=${course.course_id}`)}
                     >
                       Compare
                     </button>

@@ -130,6 +130,7 @@ const AdminDashboard: React.FC = () => {
           />
           <br />
           <select
+          title='Select Group (optional)'
             name="group_id"
             value={notificationForm.group_id}
             onChange={handleNotificationChange}

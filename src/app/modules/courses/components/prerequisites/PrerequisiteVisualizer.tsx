@@ -1,18 +1,28 @@
 import {FC, useEffect, useState, useCallback} from 'react'
-import {useParams} from 'react-router-dom'
+import {useParams, useNavigate} from 'react-router-dom'
 import {Course, PrerequisiteNode} from '../../core/_models'
 import {getCourseById, getCourseDependencies} from '../../core/_requests'
 import {KTCard, KTCardBody} from '../../../../../_metronic/helpers'
 
+interface ApiError {
+  message: string;
+  details?: {
+    course_id?: string;
+  };
+}
+
 const PrerequisiteVisualizer: FC = () => {
   const {courseId} = useParams<{courseId: string}>()
+  const navigate = useNavigate()
   const [course, setCourse] = useState<Course | null>(null)
   const [dependencies, setDependencies] = useState<PrerequisiteNode | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const loadCourseData = useCallback(async () => {
     if (!courseId) return
     setLoading(true)
+    setError(null)
     try {
       const [courseResponse, dependenciesResponse] = await Promise.all([
         getCourseById(courseId),
@@ -20,8 +30,12 @@ const PrerequisiteVisualizer: FC = () => {
       ])
       setCourse(courseResponse.data)
       setDependencies(dependenciesResponse.data as PrerequisiteNode)
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as ApiError
       console.error('Error loading course data:', error)
+      setError(error.message || 'Failed to load course data')
+      setCourse(null)
+      setDependencies(null)
     } finally {
       setLoading(false)
     }
@@ -34,6 +48,8 @@ const PrerequisiteVisualizer: FC = () => {
   }, [courseId, loadCourseData])
 
   const renderPrerequisiteTree = (node: PrerequisiteNode, level: number = 0) => {
+    if (!node) return null;
+    
     return (
       <div key={node.courseId} style={{marginLeft: `${level * 20}px`}} className='mb-5'>
         <div className='d-flex align-items-center p-5 bg-light-primary rounded'>
@@ -43,7 +59,7 @@ const PrerequisiteVisualizer: FC = () => {
           </div>
           <span className='badge badge-primary'>{`Level ${node.level}`}</span>
         </div>
-        {node.children.length > 0 && (
+        {node.children?.length > 0 && (
           <div className='ms-5 mt-5'>
             {node.children.map((child) => renderPrerequisiteTree(child, level + 1))}
           </div>
@@ -62,12 +78,33 @@ const PrerequisiteVisualizer: FC = () => {
     )
   }
 
+  if (error) {
+    return (
+      <div className='alert alert-danger'>
+        <div className='d-flex flex-column'>
+          <h4 className='mb-1 text-danger'>Error</h4>
+          <span>{error}</span>
+          <div className='mt-4'>
+            <button className='btn btn-sm btn-light' onClick={() => navigate('../browse')}>
+              Back to Course Browser
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (!course || !dependencies) {
     return (
       <div className='alert alert-warning'>
         <div className='d-flex flex-column'>
           <h4 className='mb-1 text-warning'>Course Not Found</h4>
           <span>The requested course could not be found or has no prerequisites.</span>
+          <div className='mt-4'>
+            <button className='btn btn-sm btn-light' onClick={() => navigate('../browse')}>
+              Back to Course Browser
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -75,10 +112,16 @@ const PrerequisiteVisualizer: FC = () => {
 
   return (
     <>
+      <div className='d-flex justify-content-between align-items-center mb-8'>
+        <h1 className='fs-2x fw-bold text-gray-800 mb-0'>{course.title}</h1>
+        <button className='btn btn-light' onClick={() => navigate('../browse')}>
+          Back to Course Browser
+        </button>
+      </div>
+
       <KTCard className='mb-8'>
         <KTCardBody>
           <div className='d-flex flex-column'>
-            <div className='fs-2x fw-bold text-gray-800 mb-2'>{course.title}</div>
             <div className='text-gray-600 fw-semibold fs-4 mb-4'>{course.description}</div>
             <div className='d-flex flex-wrap'>
               <div className='border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-2 mb-2'>

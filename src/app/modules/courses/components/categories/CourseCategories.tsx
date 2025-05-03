@@ -1,13 +1,18 @@
 import {FC, useState, useEffect} from 'react'
 import {useNavigate} from 'react-router-dom'
 import {Category} from '../../core/_models'
-import {getAllCategories, getCoursesByCategory} from '../../core/_requests'
+import {getAllCategories} from '../../core/_requests'
 import {KTCard, KTCardBody} from '../../../../../_metronic/helpers'
+
+interface ApiError {
+  message: string;
+}
 
 const CourseCategories: FC = () => {
   const navigate = useNavigate()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadCategories()
@@ -15,14 +20,33 @@ const CourseCategories: FC = () => {
 
   const loadCategories = async () => {
     setLoading(true)
+    setError(null)
     try {
       const response = await getAllCategories()
       setCategories(response.data)
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as ApiError
       console.error('Error loading categories:', error)
+      setError(error.message || 'Failed to load categories')
+      setCategories([])
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleViewCourses = (categoryName: string) => {
+    navigate(`../browse?category=${encodeURIComponent(categoryName)}`)
+  }
+
+  if (error) {
+    return (
+      <div className='alert alert-danger'>
+        <div className='d-flex flex-column'>
+          <h4 className='mb-1 text-danger'>Error</h4>
+          <span>{error}</span>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -49,7 +73,7 @@ const CourseCategories: FC = () => {
                 <div className='d-flex flex-wrap'>
                   <button
                     className='btn btn-sm btn-light-primary'
-                    onClick={() => navigate(`/courses/browse?category=${category.name}`)}
+                    onClick={() => handleViewCourses(category.name)}
                   >
                     View Courses
                   </button>

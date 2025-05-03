@@ -45,7 +45,7 @@ const PlanDetails: FC = () => {
 
   useEffect(() => {
     loadPlanDetails()
-  }, [planId])
+  }, [loadPlanDetails])
 
   if (loading) {
     return (
