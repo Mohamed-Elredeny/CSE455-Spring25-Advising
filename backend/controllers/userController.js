@@ -2,6 +2,8 @@ const userModel = require('../models/userModel.js');
 const bcrypt = require('bcrypt');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
+const Message = require('../models/messageModel');
+const mongoose = require('mongoose');
 
 const createToken = (_id) => {
     const jwtkey = process.env.JWT_SECRET_KEY;
@@ -134,4 +136,67 @@ const getAllUsers = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser, findUser, getAllUsers };
+const getUsersWithLastMessage = async (req, res) => {
+    try {
+        const currentUserId = req.user._id.toString();
+        const currentUserObjId = new mongoose.Types.ObjectId(currentUserId);
+        const users = await userModel.find({ _id: { $ne: currentUserObjId } }).lean();
+        const userIds = users.map(u => u._id.toString());
+        const userObjIds = userIds.map(id => new mongoose.Types.ObjectId(id));
+        console.log('Current user:', currentUserId);
+        console.log('Other user IDs:', userIds);
+
+        // Get last message for each user
+        const lastMessages = await Message.aggregate([
+            {
+                $match: {
+                    $or: [
+                        { senderId: currentUserId, receiverId: { $in: userIds } },
+                        { senderId: { $in: userIds }, receiverId: currentUserId }
+                    ]
+                }
+            },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: {
+                        $cond: [
+                            { $eq: ['$senderId', currentUserId] },
+                            '$receiverId',
+                            '$senderId'
+                        ]
+                    },
+                    lastMessageAt: { $first: '$createdAt' }
+                }
+            }
+        ]);
+        console.log('Last messages aggregation result:', lastMessages);
+
+        // Map userId to lastMessageAt
+        const lastMessageMap = {};
+        lastMessages.forEach(msg => {
+            lastMessageMap[msg._id] = msg.lastMessageAt;
+        });
+
+        // Attach lastMessageAt to users
+        const usersWithLastMessage = users.map(user => ({
+            ...user,
+            lastMessageAt: lastMessageMap[user._id.toString()] || null
+        }));
+
+        // Sort by lastMessageAt descending (nulls last)
+        usersWithLastMessage.sort((a, b) => {
+            if (!a.lastMessageAt && !b.lastMessageAt) return 0;
+            if (!a.lastMessageAt) return 1;
+            if (!b.lastMessageAt) return -1;
+            return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
+        });
+
+        res.json(usersWithLastMessage);
+    } catch (error) {
+        console.error('Error in getUsersWithLastMessage:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+module.exports = { registerUser, loginUser, findUser, getAllUsers, getUsersWithLastMessage };

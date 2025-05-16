@@ -370,19 +370,17 @@ const Chat: React.FC = () => {
     setIsLoadingUsers(true);
     setUserListError(null);
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`, {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/user/with-last-message`, {
         headers: {
           Authorization: `Bearer ${auth?.token}`,
         },
       });
       if (Array.isArray(response.data)) {
-        const filteredUsers = response.data
-          .filter((user: User) => user._id !== auth?.user?._id)
-          .map((user: User) => ({
-            ...user,
-            isOnline: onlineUsers.includes(user._id)
-          }));
-        setUsers(filteredUsers);
+        const usersWithOnline = response.data.map((user: User & { lastMessageAt?: string }) => ({
+          ...user,
+          isOnline: onlineUsers.includes(user._id)
+        }));
+        setUsers(usersWithOnline);
       } else {
         setUserListError('Invalid response format from server');
       }
