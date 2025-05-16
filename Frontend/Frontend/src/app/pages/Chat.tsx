@@ -227,7 +227,8 @@ const Chat: React.FC = () => {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!newMessage.trim() && !selectedFile) || !socket || !userId || !auth?.user?._id) return;
+    const targetUserId = isPrivateChatList ? selectedUser?._id : userId;
+    if ((!newMessage.trim() && !selectedFile) || !socket || !targetUserId || !auth?.user?._id) return;
 
     try {
       let fileUrl = '';
@@ -245,7 +246,7 @@ const Chat: React.FC = () => {
 
       const messageData = {
         senderId: auth.user._id,
-        receiverId: userId,
+        receiverId: targetUserId,
         content: newMessage,
         ...(fileUrl && { fileUrl, fileName }),
       };
