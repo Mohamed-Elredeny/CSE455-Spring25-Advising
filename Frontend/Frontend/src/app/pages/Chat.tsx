@@ -9,6 +9,7 @@ import MessageList from '../components/chat/MessageList';
 import ChatInput from '../components/chat/ChatInput';
 import MessageSearch from '../components/chat/MessageSearch';
 import ChatHeader from '../components/chat/ChatHeader';
+import ChatSidebar from '../components/chat/ChatSidebar';
 
 interface Message {
   _id: string;
@@ -46,6 +47,10 @@ const Chat: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Message[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+  const [userListError, setUserListError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchChatUser = async () => {
@@ -327,6 +332,78 @@ const Chat: React.FC = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    if (!auth?.token) return;
+    setIsLoadingUsers(true);
+    setUserListError(null);
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`, {
+        headers: {
+          Authorization: `Bearer ${auth?.token}`,
+        },
+      });
+      if (Array.isArray(response.data)) {
+        const filteredUsers = response.data
+          .filter((user: User) => user._id !== auth?.user?._id)
+          .map((user: User) => ({
+            ...user,
+            isOnline: onlineUsers.includes(user._id)
+          }));
+        setUsers(filteredUsers);
+      } else {
+        setUserListError('Invalid response format from server');
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setUserListError('Failed to load users. Please try again later.');
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (auth?.token) {
+      fetchUsers();
+    }
+  }, [auth?.token, auth?.user?._id]);
+
+  useEffect(() => {
+    if (!auth?.token) return;
+    const socketInstance: Socket = io(import.meta.env.VITE_API_URL, {
+      transports: ['websocket'],
+      auth: { token: auth?.token }
+    });
+    socketInstance.on('connect', () => {
+      socketInstance.emit('getOnlineUsers');
+    });
+    socketInstance.on('onlineUsers', (onlineUsers: string[]) => {
+      setOnlineUsers(onlineUsers);
+      setUsers(prevUsers =>
+        prevUsers.map(user => ({
+          ...user,
+          isOnline: onlineUsers.includes(user._id)
+        }))
+      );
+    });
+    socketInstance.on('userOnline', (data: { userId: string }) => {
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user._id === data.userId ? { ...user, isOnline: true } : user
+        )
+      );
+    });
+    socketInstance.on('userOffline', (data: { userId: string }) => {
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user._id === data.userId ? { ...user, isOnline: false } : user
+        )
+      );
+    });
+    return () => {
+      socketInstance.disconnect();
+    };
+  }, [auth?.token]);
+
   if (!auth?.user?._id) {
     return (
       <div className="card">
@@ -341,9 +418,46 @@ const Chat: React.FC = () => {
   }
 
   return (
-    <div className="card mx-auto my-8 w-100 mw-1000px shadow" id="kt_chat_messenger">
-      {chatUser ? (
-        <>
+    <div className="chat-container">
+      {!chatUser ? (
+        <div style={{ display: 'flex', width: '100%' }}>
+          <div style={{ width: 300, minWidth: 300 }}>
+            {isLoadingUsers ? (
+              <div className="d-flex justify-content-center py-10">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : userListError ? (
+              <div className="alert alert-danger">
+                {userListError}
+                <button className="btn btn-sm btn-light ms-3" onClick={fetchUsers}>
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <ChatSidebar
+                users={users}
+                onUserSelect={(user) => {
+                  navigate(`/chat/${user._id}`);
+                }}
+              />
+            )}
+          </div>
+          <div className="flex-grow-1 d-flex align-items-center justify-content-center min-h-400px">
+            <div className="text-center">
+              <i className="ki-duotone ki-message-text-2 fs-5tx text-primary mb-5">
+                <span className="path1"></span>
+                <span className="path2"></span>
+                <span className="path3"></span>
+              </i>
+              <h3 className="text-gray-800 mb-2">Select a chat to start messaging</h3>
+              <div className="text-muted">Choose from your contacts list to start a conversation</div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="card mx-auto my-8 w-100 mw-1000px shadow" id="kt_chat_messenger">
           <ChatHeader
             chatUser={chatUser}
             isOnline={isOnline}
@@ -412,18 +526,6 @@ const Chat: React.FC = () => {
                 isUploading={isUploading}
               />
             </div>
-          </div>
-        </>
-      ) : (
-        <div className="card-body d-flex align-items-center justify-content-center min-h-400px">
-          <div className="text-center">
-            <i className="ki-duotone ki-message-text-2 fs-5tx text-primary mb-5">
-              <span className="path1"></span>
-              <span className="path2"></span>
-              <span className="path3"></span>
-            </i>
-            <h3 className="text-gray-800 mb-2">Select a chat to start messaging</h3>
-            <div className="text-muted">Choose from your contacts list to start a conversation</div>
           </div>
         </div>
       )}

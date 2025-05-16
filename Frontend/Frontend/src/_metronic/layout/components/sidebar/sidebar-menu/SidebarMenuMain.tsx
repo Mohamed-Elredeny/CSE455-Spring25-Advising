@@ -14,12 +14,6 @@ const SidebarMenuMain = () => {
         </div>
       </div>
       <SidebarMenuItem
-        to="/users"
-        icon="user"
-        title="Users"
-        fontIcon="bi-people"
-      />
-      <SidebarMenuItem
         to="/chat"
         icon="message-text-2"
         title="Chat"
