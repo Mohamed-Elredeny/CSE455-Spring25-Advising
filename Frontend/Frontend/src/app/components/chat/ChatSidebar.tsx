@@ -13,31 +13,26 @@ interface User {
 interface ChatSidebarProps {
   users: User[];
   onUserSelect: (user: User) => void;
+  shouldNavigate?: boolean;
 }
 
-const ChatSidebar: React.FC<ChatSidebarProps> = ({ users, onUserSelect }) => {
+const ChatSidebar: React.FC<ChatSidebarProps> = ({ users, onUserSelect, shouldNavigate = true }) => {
   const navigate = useNavigate();
 
   const handleUserSelect = (user: User) => {
     onUserSelect(user);
-    navigate(`/chat/${user._id}`);
+    if (shouldNavigate) {
+      navigate(`/chat/${user._id}`);
+    }
   };
 
   return (
-    <div className="chat-sidebar">
-      <div className="card h-100">
-        <div className="card-header">
-          <div className="card-title">
-            <h3 className="card-label">Chats</h3>
-          </div>
-        </div>
-        <div className="card-body">
-          <UserList
-            users={users}
-            onUserSelect={handleUserSelect}
-          />
-        </div>
-      </div>
+    <div className="chat-sidebar" style={{ paddingLeft: 16, paddingRight: 16 }}>
+      <h3 className="card-label mb-4">Chats</h3>
+      <UserList
+        users={users}
+        onUserSelect={handleUserSelect}
+      />
     </div>
   );
 };

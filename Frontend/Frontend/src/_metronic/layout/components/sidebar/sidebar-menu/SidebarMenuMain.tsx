@@ -13,12 +13,19 @@ const SidebarMenuMain = () => {
           <span className='menu-section text-muted text-uppercase fs-8 ls-1'>Chat</span>
         </div>
       </div>
-      <SidebarMenuItem
+      <SidebarMenuItemWithSub
         to="/chat"
-        icon="message-text-2"
         title="Chat"
+        icon="message-text-2"
         fontIcon="bi-chat-left"
-      />
+      >
+        <SidebarMenuItem
+          to="/chat/private"
+          icon="user"
+          title="Private Chat"
+          fontIcon="bi-person"
+        />
+      </SidebarMenuItemWithSub>
     </>
   )
 }

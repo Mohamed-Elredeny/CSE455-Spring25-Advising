@@ -39,6 +39,14 @@ const PrivateRoutes = () => {
           }
         />
         <Route path='chat' element={<Navigate to='/users' />} />
+        <Route
+          path='chat/private'
+          element={
+            <SuspensedView>
+              <Chat />
+            </SuspensedView>
+          }
+        />
 
         {/* Lazy Modules */}
         <Route

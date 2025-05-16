@@ -24,23 +24,18 @@ const UserList: React.FC<UserListProps> = ({ users, onUserSelect }) => {
   );
 
   return (
-    <div className="card card-flush">
-      <div className="card-header pt-7">
-        <UserSearch
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+    <div>
+      <UserSearch
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+      />
+      {filteredUsers.map(user => (
+        <UserItem
+          key={user._id}
+          user={user}
+          onClick={() => onUserSelect(user)}
         />
-      </div>
-
-      <div className="card-body pt-5">
-        {filteredUsers.map(user => (
-          <UserItem
-            key={user._id}
-            user={user}
-            onClick={() => onUserSelect(user)}
-          />
-        ))}
-      </div>
+      ))}
     </div>
   );
 };

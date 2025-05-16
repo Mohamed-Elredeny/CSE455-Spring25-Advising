@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../modules/auth/core/Auth';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
@@ -34,6 +34,7 @@ interface User {
 
 const Chat: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
+  const location = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [chatUser, setChatUser] = useState<User | null>(null);
@@ -52,52 +53,81 @@ const Chat: React.FC = () => {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [userListError, setUserListError] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  // Only show user list if on /chat/private
+  const isPrivateChatList = location.pathname === '/chat/private';
+
+  // Fetch chat user and messages only if not in /chat/private (legacy route)
+  useEffect(() => {
+    if (!isPrivateChatList && userId && auth?.token) {
+      const fetchChatUser = async () => {
+        try {
+          const response = await axios.get(`${import.meta.env.VITE_API_URL}/user/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${auth?.token}`,
+            },
+          });
+          if (response.data && response.data._id) {
+            setChatUser(response.data);
+          } else {
+            setChatUser(null);
+          }
+        } catch (error) {
+          setChatUser(null);
+        }
+      };
+      fetchChatUser();
+    }
+  }, [userId, auth?.token, isPrivateChatList]);
 
   useEffect(() => {
-    const fetchChatUser = async () => {
-      if (!userId || !auth?.token) return;
-      
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/user/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${auth?.token}`,
-          },
-        });
-        if (response.data && response.data._id) {
-          setChatUser(response.data);
-        } else {
-          navigate('/users');
-        }
-      } catch (error) {
-        console.error('Error fetching chat user:', error);
-        navigate('/users');
-      }
-    };
-
-    const fetchMessages = async () => {
-      if (!userId || !auth?.token || !auth?.user?._id) return;
-      
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/messages?userId=${userId}&currentUserId=${auth.user._id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${auth.token}`,
-            },
+    if (!isPrivateChatList && userId && auth?.token && auth?.user?._id) {
+      const fetchMessages = async () => {
+        try {
+          const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/messages?userId=${userId}&currentUserId=${auth.user._id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${auth.token}`,
+              },
+            }
+          );
+          if (Array.isArray(response.data)) {
+            setMessages(response.data);
           }
-        );
-        
-        if (Array.isArray(response.data)) {
-          setMessages(response.data);
+        } catch (error) {
+          setMessages([]);
         }
-      } catch (error) {
-        console.error('Error fetching messages:', error);
-      }
-    };
+      };
+      fetchMessages();
+    }
+  }, [userId, auth?.token, auth?.user?._id, isPrivateChatList]);
 
-    fetchChatUser();
-    fetchMessages();
-  }, [userId, auth?.token, auth?.user?._id, navigate]);
+  // Fetch messages for selectedUser in /chat/private
+  useEffect(() => {
+    if (isPrivateChatList && selectedUser && auth?.token && auth?.user?._id) {
+      const fetchMessages = async () => {
+        try {
+          const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/messages?userId=${selectedUser._id}&currentUserId=${auth.user._id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${auth.token}`,
+              },
+            }
+          );
+          if (Array.isArray(response.data)) {
+            setMessages(response.data);
+          }
+        } catch (error) {
+          setMessages([]);
+        }
+      };
+      fetchMessages();
+      setChatUser(selectedUser);
+    }
+  }, [isPrivateChatList, selectedUser, auth?.token, auth?.user?._id]);
 
   useEffect(() => {
     if (!auth?.token) return;
@@ -421,7 +451,7 @@ const Chat: React.FC = () => {
 
   return (
     <div className="chat-container">
-      {!chatUser ? (
+      {isPrivateChatList ? (
         <div style={{ display: 'flex', width: '100%' }}>
           <div style={{ width: 300, minWidth: 300 }}>
             {isLoadingUsers ? (
@@ -441,30 +471,97 @@ const Chat: React.FC = () => {
               <ChatSidebar
                 users={users}
                 onUserSelect={(user) => {
-                  navigate(`/chat/${user._id}`);
+                  setSelectedUser(user);
                 }}
+                shouldNavigate={false}
               />
             )}
           </div>
           <div className="flex-grow-1 d-flex align-items-center justify-content-center min-h-400px">
-            <div className="text-center">
-              <i className="ki-duotone ki-message-text-2 fs-5tx text-primary mb-5">
-                <span className="path1"></span>
-                <span className="path2"></span>
-                <span className="path3"></span>
-              </i>
-              <h3 className="text-gray-800 mb-2">Select a chat to start messaging</h3>
-              <div className="text-muted">Choose from your contacts list to start a conversation</div>
-            </div>
+            {selectedUser ? (
+              <div className="card mx-auto my-8 w-100 mw-1000px shadow" id="kt_chat_messenger">
+                <ChatHeader
+                  chatUser={selectedUser}
+                  isOnline={!!selectedUser.isOnline}
+                  onSearchClick={() => setIsSearchOpen(true)}
+                  onCloseClick={() => setSelectedUser(null)}
+                />
+                {isSearchOpen && (
+                  <MessageSearch
+                    searchQuery={searchQuery}
+                    onSearchChange={handleSearch}
+                    onClose={() => {
+                      setIsSearchOpen(false);
+                      setSearchQuery('');
+                      setSearchResults([]);
+                    }}
+                    searchResults={searchResults}
+                    onResultClick={scrollToMessage}
+                  />
+                )}
+                <div className="card-body p-0">
+                  <div
+                    className="messages-wrapper scroll-y me-n5 pe-5"
+                    data-kt-element="messages"
+                    data-kt-scroll="true"
+                    data-kt-scroll-activate="{default: false, lg: true}"
+                    data-kt-scroll-max-height="auto"
+                    data-kt-scroll-dependencies="#kt_header, #kt_app_header, #kt_app_toolbar, #kt_toolbar, #kt_footer, #kt_app_footer, #kt_chat_messenger_header, #kt_chat_messenger_footer"
+                    data-kt-scroll-wrappers="#kt_content, #kt_app_content, #kt_chat_messenger_body"
+                    data-kt-scroll-offset="5px"
+                    style={{ height: 'calc(100vh - 400px)' }}
+                  >
+                    <MessageList
+                      messages={messages}
+                      currentUserId={auth.user._id}
+                      userName={selectedUser.name}
+                      onEdit={(messageId, content) => {
+                        setEditingMessageId(messageId);
+                        setEditMessageContent(content);
+                      }}
+                      onDelete={handleDeleteMessage}
+                      editingMessageId={editingMessageId}
+                      editContent={editMessageContent}
+                      onEditContentChange={setEditMessageContent}
+                      onEditSubmit={() => handleEditMessage(editingMessageId!, editMessageContent)}
+                      onEditCancel={() => {
+                        setEditingMessageId(null);
+                        setEditMessageContent('');
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="card-footer pt-4" id="kt_chat_messenger_footer">
+                  <ChatInput
+                    newMessage={newMessage}
+                    onMessageChange={setNewMessage}
+                    onFileSelect={setSelectedFile}
+                    onSend={sendMessage}
+                    selectedFile={selectedFile}
+                    isUploading={isUploading}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="text-center w-100">
+                <i className="ki-duotone ki-message-text-2 fs-5tx text-primary mb-5">
+                  <span className="path1"></span>
+                  <span className="path2"></span>
+                  <span className="path3"></span>
+                </i>
+                <h3 className="text-gray-800 mb-2">Select a chat to start messaging</h3>
+                <div className="text-muted">Choose from your contacts list to start a conversation</div>
+              </div>
+            )}
           </div>
         </div>
-      ) : (
+      ) : chatUser ? (
         <div className="card mx-auto my-8 w-100 mw-1000px shadow" id="kt_chat_messenger">
           <ChatHeader
             chatUser={chatUser}
             isOnline={isOnline}
             onSearchClick={() => setIsSearchOpen(true)}
-            onCloseClick={() => navigate('/users')}
+            onCloseClick={() => navigate('/chat/private')}
           />
 
           {isSearchOpen && (
@@ -493,26 +590,24 @@ const Chat: React.FC = () => {
               data-kt-scroll-offset="5px"
               style={{ height: 'calc(100vh - 400px)' }}
             >
-              <div className="messages d-flex flex-column px-5">
-                <MessageList
-                  messages={messages}
-                  currentUserId={auth.user._id}
-                  userName={chatUser.name}
-                  onEdit={(messageId, content) => {
-                    setEditingMessageId(messageId);
-                    setEditMessageContent(content);
-                  }}
-                  onDelete={handleDeleteMessage}
-                  editingMessageId={editingMessageId}
-                  editContent={editMessageContent}
-                  onEditContentChange={setEditMessageContent}
-                  onEditSubmit={() => handleEditMessage(editingMessageId!, editMessageContent)}
-                  onEditCancel={() => {
-                    setEditingMessageId(null);
-                    setEditMessageContent('');
-                  }}
-                />
-              </div>
+              <MessageList
+                messages={messages}
+                currentUserId={auth.user._id}
+                userName={chatUser.name}
+                onEdit={(messageId, content) => {
+                  setEditingMessageId(messageId);
+                  setEditMessageContent(content);
+                }}
+                onDelete={handleDeleteMessage}
+                editingMessageId={editingMessageId}
+                editContent={editMessageContent}
+                onEditContentChange={setEditMessageContent}
+                onEditSubmit={() => handleEditMessage(editingMessageId!, editMessageContent)}
+                onEditCancel={() => {
+                  setEditingMessageId(null);
+                  setEditMessageContent('');
+                }}
+              />
             </div>
 
             <div 
@@ -528,6 +623,18 @@ const Chat: React.FC = () => {
                 isUploading={isUploading}
               />
             </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-grow-1 d-flex align-items-center justify-content-center min-h-400px">
+          <div className="text-center">
+            <i className="ki-duotone ki-message-text-2 fs-5tx text-primary mb-5">
+              <span className="path1"></span>
+              <span className="path2"></span>
+              <span className="path3"></span>
+            </i>
+            <h3 className="text-gray-800 mb-2">Select a chat to start messaging</h3>
+            <div className="text-muted">Choose from your contacts list to start a conversation</div>
           </div>
         </div>
       )}

@@ -10,7 +10,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ searchTerm, onSearchChange }) =
     <div className="position-relative mb-5 w-100">
       <input
         type="text"
-        className="form-control form-control-solid px-15 w-100"
+        className="form-control form-control-solid px-15 w-100 user-search-input"
         placeholder="Search users..."
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
@@ -27,4 +27,13 @@ const UserSearch: React.FC<UserSearchProps> = ({ searchTerm, onSearchChange }) =
   );
 };
 
-export default UserSearch; 
+export default UserSearch;
+
+// Add style for smaller font
+const style = document.createElement('style');
+style.textContent = `
+  .user-search-input {
+    font-size: 0.9rem;
+  }
+`;
+document.head.appendChild(style); 
