@@ -91,7 +91,8 @@ const handleMessageUpdate = (socket) => {
             if (user) {
                 socket.to(user.socketId).emit('messageUpdate', {
                     messageId,
-                    content
+                    content,
+                    edited: true
                 });
             }
         } catch (error) {

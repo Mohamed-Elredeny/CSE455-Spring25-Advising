@@ -77,6 +77,7 @@ const updateMessage = async (req, res) => {
         }
 
         message.content = req.body.content;
+        message.edited = true;
         await message.save();
 
         res.json(message);

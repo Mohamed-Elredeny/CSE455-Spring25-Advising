@@ -10,6 +10,7 @@ interface Message {
   fileUrl?: string;
   fileName?: string;
   deleted?: boolean;
+  edited?: boolean;
 }
 
 interface MessageProps {
@@ -129,6 +130,9 @@ const Message: React.FC<MessageProps> = ({
 
                   <div className={`d-flex align-items-center gap-2 mt-1 ${message.type === 'out' ? 'justify-content-end' : ''}`}>
                     <span className="text-muted fs-8">{formatDate(message.createdAt)}</span>
+                    {message.edited && !message.deleted && (
+                      <span className="text-info fs-8 fst-italic ms-1">(edited)</span>
+                    )}
                     {message.type === 'out' && !message.deleted && canEditOrDelete() && (
                       <button
                         className="btn btn-sm btn-icon btn-active-light-info p-0 h-20px w-20px"

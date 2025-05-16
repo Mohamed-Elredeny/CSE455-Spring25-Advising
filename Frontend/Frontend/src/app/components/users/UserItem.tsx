@@ -24,9 +24,6 @@ const UserItem: React.FC<UserItemProps> = ({ user, onClick }) => {
           <span className="symbol-label bg-light-info text-info fw-bolder">
             {user.name?.charAt(0)?.toUpperCase()}
           </span>
-          {user.isOnline && (
-            <div className="position-absolute bg-success rounded-circle border border-white h-8px w-8px bottom-0 end-0"></div>
-          )}
         </div>
 
         <div className="d-flex flex-column flex-grow-1">

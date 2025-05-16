@@ -21,6 +21,7 @@ interface Message {
   fileUrl?: string;
   fileName?: string;
   deleted?: boolean;
+  edited?: boolean;
 }
 
 interface User {
@@ -146,10 +147,10 @@ const Chat: React.FC = () => {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('messageUpdate', ({ messageId, content }) => {
+    socket.on('messageUpdate', ({ messageId, content, edited }) => {
       setMessages(prev =>
         prev.map(msg =>
-          msg._id === messageId ? { ...msg, content } : msg
+          msg._id === messageId ? { ...msg, content, edited: !!edited } : msg
         )
       );
     });
@@ -247,7 +248,7 @@ const Chat: React.FC = () => {
     try {
       await axios.put(
         `${import.meta.env.VITE_API_URL}/messages/${messageId}`,
-        { content: newContent },
+        { content: newContent, edited: true },
         {
           headers: {
             Authorization: `Bearer ${auth.token}`,
@@ -257,13 +258,14 @@ const Chat: React.FC = () => {
 
       setMessages(prev =>
         prev.map(msg =>
-          msg._id === messageId ? { ...msg, content: newContent } : msg
+          msg._id === messageId ? { ...msg, content: newContent, edited: true } : msg
         )
       );
       
       socket?.emit('messageUpdate', {
         messageId,
         content: newContent,
+        edited: true,
         receiverId: userId
       });
 
