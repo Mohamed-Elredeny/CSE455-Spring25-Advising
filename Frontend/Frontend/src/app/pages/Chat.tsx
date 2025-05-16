@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../modules/auth/core/Auth';
 import axios from 'axios';
@@ -134,36 +134,74 @@ const Chat: React.FC = () => {
 
     const socketInstance: Socket = io(import.meta.env.VITE_API_URL, {
       transports: ['websocket'],
-      auth: {
-        token: auth?.token
-      }
+      auth: { token: auth?.token }
     });
-    
+
     socketInstance.on('connect', () => {
       socketInstance.emit('getOnlineUsers');
     });
 
     socketInstance.on('onlineUsers', (onlineUsers: string[]) => {
-      setIsOnline(onlineUsers.includes(chatUser?._id || ''));
+      setOnlineUsers(onlineUsers);
+      setUsers(prevUsers =>
+        prevUsers.map(user => ({
+          ...user,
+          isOnline: onlineUsers.includes(user._id)
+        }))
+      );
+      if (chatUser) {
+        setIsOnline(onlineUsers.includes(chatUser._id));
+      }
     });
 
     socketInstance.on('userOnline', (data: { userId: string }) => {
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user._id === data.userId ? { ...user, isOnline: true } : user
+        )
+      );
       if (chatUser && data.userId === chatUser._id) {
         setIsOnline(true);
       }
     });
 
     socketInstance.on('userOffline', (data: { userId: string }) => {
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user._id === data.userId ? { ...user, isOnline: false } : user
+        )
+      );
       if (chatUser && data.userId === chatUser._id) {
         setIsOnline(false);
       }
     });
 
     socketInstance.on('message', (data) => {
-      if (data.senderId === userId || data.receiverId === userId) {
+      const targetUserId = isPrivateChatList ? selectedUser?._id : userId;
+      if (data.senderId === targetUserId || data.receiverId === targetUserId) {
         const messageType = data.senderId === auth?.user?._id ? 'out' : 'in';
         const newMessage = { ...data, type: messageType };
         setMessages(prev => [...prev, newMessage]);
+      }
+    });
+
+    socketInstance.on('messageUpdate', ({ messageId, content, edited, receiverId }) => {
+      const targetUserId = isPrivateChatList ? selectedUser?._id : userId;
+      if (receiverId === auth?.user?._id || receiverId === targetUserId) {
+        setMessages(prev =>
+          prev.map(msg =>
+            msg._id === messageId ? { ...msg, content, edited: !!edited } : msg
+          )
+        );
+      }
+    });
+
+    socketInstance.on('messageDelete', ({ messageId, receiverId }) => {
+      const targetUserId = isPrivateChatList ? selectedUser?._id : userId;
+      if (receiverId === auth?.user?._id || receiverId === targetUserId) {
+        setMessages(prev => prev.map(msg =>
+          msg._id === messageId ? { ...msg, deleted: true } : msg
+        ));
       }
     });
 
@@ -172,30 +210,7 @@ const Chat: React.FC = () => {
     return () => {
       socketInstance.disconnect();
     };
-  }, [auth?.token, chatUser, userId, auth?.user?._id]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on('messageUpdate', ({ messageId, content, edited }) => {
-      setMessages(prev =>
-        prev.map(msg =>
-          msg._id === messageId ? { ...msg, content, edited: !!edited } : msg
-        )
-      );
-    });
-
-    socket.on('messageDelete', ({ messageId }) => {
-      setMessages(prev => prev.map(msg =>
-        msg._id === messageId ? { ...msg, deleted: true } : msg
-      ));
-    });
-
-    return () => {
-      socket.off('messageUpdate');
-      socket.off('messageDelete');
-    };
-  }, [socket]);
+  }, [auth?.token, chatUser, userId, auth?.user?._id, isPrivateChatList, selectedUser?._id]);
 
   const uploadFile = async (file: File): Promise<string> => {
     const formData = new FormData();
@@ -297,7 +312,7 @@ const Chat: React.FC = () => {
         messageId,
         content: newContent,
         edited: true,
-        receiverId: userId
+        receiverId: isPrivateChatList ? selectedUser?._id : userId
       });
 
       setEditingMessageId(null);
@@ -325,10 +340,10 @@ const Chat: React.FC = () => {
         msg._id === messageId ? { ...msg, deleted: true } : msg
       ));
       
-      if (socket && userId) {
+      if (socket) {
         socket.emit('messageDelete', {
           messageId,
-          receiverId: userId
+          receiverId: isPrivateChatList ? selectedUser?._id : userId
         });
       }
     } catch (error) {
@@ -365,7 +380,7 @@ const Chat: React.FC = () => {
     }
   };
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     if (!auth?.token) return;
     setIsLoadingUsers(true);
     setUserListError(null);
@@ -390,50 +405,13 @@ const Chat: React.FC = () => {
     } finally {
       setIsLoadingUsers(false);
     }
-  };
+  }, [auth?.token, onlineUsers]);
 
   useEffect(() => {
     if (auth?.token) {
       fetchUsers();
     }
-  }, [auth?.token, auth?.user?._id]);
-
-  useEffect(() => {
-    if (!auth?.token) return;
-    const socketInstance: Socket = io(import.meta.env.VITE_API_URL, {
-      transports: ['websocket'],
-      auth: { token: auth?.token }
-    });
-    socketInstance.on('connect', () => {
-      socketInstance.emit('getOnlineUsers');
-    });
-    socketInstance.on('onlineUsers', (onlineUsers: string[]) => {
-      setOnlineUsers(onlineUsers);
-      setUsers(prevUsers =>
-        prevUsers.map(user => ({
-          ...user,
-          isOnline: onlineUsers.includes(user._id)
-        }))
-      );
-    });
-    socketInstance.on('userOnline', (data: { userId: string }) => {
-      setUsers(prevUsers =>
-        prevUsers.map(user =>
-          user._id === data.userId ? { ...user, isOnline: true } : user
-        )
-      );
-    });
-    socketInstance.on('userOffline', (data: { userId: string }) => {
-      setUsers(prevUsers =>
-        prevUsers.map(user =>
-          user._id === data.userId ? { ...user, isOnline: false } : user
-        )
-      );
-    });
-    return () => {
-      socketInstance.disconnect();
-    };
-  }, [auth?.token]);
+  }, [auth?.token, auth?.user?._id, fetchUsers]);
 
   if (!auth?.user?._id) {
     return (

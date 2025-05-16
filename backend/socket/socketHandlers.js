@@ -87,14 +87,24 @@ const handleMessage = (socket) => {
 const handleMessageUpdate = (socket) => {
     socket.on('messageUpdate', ({ messageId, content, receiverId }) => {
         try {
-            const user = onlineUsers.find((user) => user.userId === receiverId);
-            if (user) {
-                socket.to(user.socketId).emit('messageUpdate', {
+            // Emit to receiver
+            const receiver = onlineUsers.find((user) => user.userId === receiverId);
+            if (receiver) {
+                socket.to(receiver.socketId).emit('messageUpdate', {
                     messageId,
                     content,
-                    edited: true
+                    edited: true,
+                    receiverId
                 });
             }
+            
+            // Also emit back to sender to ensure sync
+            socket.emit('messageUpdate', {
+                messageId,
+                content,
+                edited: true,
+                receiverId
+            });
         } catch (error) {
             console.error('Error in message update handling:', error);
         }
@@ -105,14 +115,20 @@ const handleMessageDelete = (io, socket) => {
     socket.on('messageDelete', ({ messageId, receiverId }) => {
         console.log('Message delete event received:', { messageId, receiverId });
         
-        // Emit to the receiver
-        const receiverSocket = getReceiverSocket(io, receiverId);
-        if (receiverSocket) {
-            receiverSocket.emit('messageDelete', { messageId });
+        // Emit to receiver
+        const receiver = onlineUsers.find((user) => user.userId === receiverId);
+        if (receiver) {
+            socket.to(receiver.socketId).emit('messageDelete', { 
+                messageId,
+                receiverId 
+            });
         }
         
         // Also emit back to sender to ensure sync
-        socket.emit('messageDelete', { messageId });
+        socket.emit('messageDelete', { 
+            messageId,
+            receiverId 
+        });
     });
 };
 
