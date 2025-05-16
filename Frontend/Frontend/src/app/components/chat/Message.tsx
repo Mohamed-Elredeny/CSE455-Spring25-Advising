@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 interface Message {
   _id: string;
@@ -36,7 +36,7 @@ const Message: React.FC<MessageProps> = ({
   onEditSubmit,
   onEditCancel
 }) => {
-  const formatDate = (dateString: string) => {
+  const formatDate = useMemo(() => (dateString: string) => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
     return date.toLocaleString('en-US', {
@@ -46,9 +46,9 @@ const Message: React.FC<MessageProps> = ({
       minute: 'numeric',
       hour12: true
     });
-  };
+  }, []);
 
-  const handleFileDownload = (fileUrl: string, fileName: string) => {
+  const handleFileDownload = useMemo(() => (fileUrl: string, fileName: string) => {
     fetch(fileUrl)
       .then(response => response.blob())
       .then(blob => {
@@ -62,13 +62,13 @@ const Message: React.FC<MessageProps> = ({
         document.body.removeChild(a);
       })
       .catch(error => console.error('Error downloading file:', error));
-  };
+  }, []);
 
-  const canEditOrDelete = () => {
+  const canEditOrDelete = useMemo(() => {
     const messageDate = new Date(message.createdAt);
     const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
     return messageDate > threeHoursAgo;
-  };
+  }, [message.createdAt]);
 
   return (
     <div
@@ -113,7 +113,7 @@ const Message: React.FC<MessageProps> = ({
                         message.type === 'out' ? 'bg-info cursor-pointer' : 'bg-light-secondary'
                       }`}
                       onDoubleClick={() => {
-                        if (message.type === 'out' && !message.deleted && canEditOrDelete()) {
+                        if (message.type === 'out' && !message.deleted && canEditOrDelete) {
                           onEdit(message._id, message.content);
                         }
                       }}
@@ -133,7 +133,7 @@ const Message: React.FC<MessageProps> = ({
                     {message.edited && !message.deleted && (
                       <span className="text-info fs-8 fst-italic ms-1">(edited)</span>
                     )}
-                    {message.type === 'out' && !message.deleted && canEditOrDelete() && (
+                    {message.type === 'out' && !message.deleted && canEditOrDelete && (
                       <button
                         className="btn btn-sm btn-icon btn-active-light-info p-0 h-20px w-20px"
                         onClick={() => onDelete(message._id)}

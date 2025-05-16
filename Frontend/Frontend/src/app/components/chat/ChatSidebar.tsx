@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserList from '../users/UserList';
 
@@ -19,15 +19,15 @@ interface ChatSidebarProps {
 const ChatSidebar: React.FC<ChatSidebarProps> = ({ users, onUserSelect, shouldNavigate = true }) => {
   const navigate = useNavigate();
 
-  const handleUserSelect = (user: User) => {
+  const handleUserSelect = useCallback((user: User) => {
     onUserSelect(user);
     if (shouldNavigate) {
       navigate(`/chat/${user._id}`);
     }
-  };
+  }, [onUserSelect, shouldNavigate, navigate]);
 
   return (
-    <div className="chat-sidebar" style={{ paddingLeft: 16, paddingRight: 16 }}>
+    <div className="chat-sidebar px-4">
       <h3 className="card-label mb-4">Chats</h3>
       <UserList
         users={users}

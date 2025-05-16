@@ -1,11 +1,7 @@
-import {useIntl} from 'react-intl'
-
 import {SidebarMenuItemWithSub} from './SidebarMenuItemWithSub'
 import {SidebarMenuItem} from './SidebarMenuItem'
 
 const SidebarMenuMain = () => {
-  const intl = useIntl()
-
   return (
     <>
       <div className='menu-item'>

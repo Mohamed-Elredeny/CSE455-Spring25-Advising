@@ -1,4 +1,7 @@
-import React, { useRef, KeyboardEvent } from 'react';
+import React, { useRef, KeyboardEvent, useCallback } from 'react';
+
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 interface ChatInputProps {
   newMessage: string;
@@ -19,28 +22,27 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > MAX_FILE_SIZE) {
         alert('File size should not exceed 5MB');
         return;
       }
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain'];
-      if (!allowedTypes.includes(file.type)) {
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
         alert('File type not supported. Please upload an image, PDF, or text file.');
         return;
       }
       onFileSelect(file);
     }
-  };
+  }, [onFileSelect]);
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && newMessage.trim()) {
       e.preventDefault();
       onSend(e);
     }
-  };
+  }, [newMessage, onSend]);
 
   return (
     <div className="card-footer p-0">
@@ -75,9 +77,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <input
           type="file"
           ref={fileInputRef}
-          style={{ display: 'none' }}
+          className="d-none"
           onChange={handleFileSelect}
-          accept="image/jpeg,image/png,image/gif,application/pdf,text/plain"
+          accept={ALLOWED_FILE_TYPES.join(',')}
         />
         <input
           type="text"
