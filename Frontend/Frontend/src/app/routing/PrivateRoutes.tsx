@@ -15,30 +15,13 @@ const PrivateRoutes = () => {
   return (
     <Routes>
       <Route element={<MasterLayout />}>
-        {/* Redirect to Users page after success login/registration */}
-        <Route path='auth/*' element={<Navigate to='/users' />} />
+        {/* Redirect to Private Chat page after success login/registration */}
+        <Route path='auth/*' element={<Navigate to='/chat/private' />} />
         
         {/* Pages */}
         <Route path='menu-test' element={<MenuTestPage />} />
 
         {/* Chat Routes */}
-        <Route
-          path='users'
-          element={
-            <SuspensedView>
-              <UsersPage />
-            </SuspensedView>
-          }
-        />
-        <Route
-          path='chat/:userId'
-          element={
-            <SuspensedView>
-              <Chat />
-            </SuspensedView>
-          }
-        />
-        <Route path='chat' element={<Navigate to='/users' />} />
         <Route
           path='chat/private'
           element={
