@@ -8,11 +8,14 @@ const createGroup = async (req, res) => {
     if (!name || !Array.isArray(members) || members.length < 2) {
       return res.status(400).json({ message: 'Group name and at least 2 members required' });
     }
+    // Ensure creator is a member and admin
+    const creatorId = req.user._id;
+    const allMembers = Array.from(new Set([...members, creatorId.toString()]));
     const group = new Group({
       name,
-      members,
-      admins: [req.user._id],
-      createdBy: req.user._id
+      members: allMembers,
+      admins: [creatorId],
+      createdBy: creatorId
     });
     await group.save();
     res.status(201).json(group);
@@ -134,6 +137,22 @@ const leaveGroup = async (req, res) => {
   }
 };
 
+const updateGroup = async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.groupId);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+    // Only admins can rename
+    if (!group.admins.map(String).includes(String(req.user._id))) {
+      return res.status(403).json({ message: 'Only admins can rename group' });
+    }
+    if (req.body.name) group.name = req.body.name;
+    await group.save();
+    res.json(group);
+  } catch (error) {
+    res.status(500).json({ message: 'Error renaming group', error: error.message });
+  }
+};
+
 module.exports = {
   createGroup,
   getUserGroups,
@@ -141,5 +160,6 @@ module.exports = {
   addMembers,
   removeMembers,
   updateAdmins,
-  leaveGroup
+  leaveGroup,
+  updateGroup
 }; 

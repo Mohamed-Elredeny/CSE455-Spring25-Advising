@@ -733,6 +733,12 @@ const Chat: React.FC = () => {
     }
   };
 
+  const isAdmin = groupDetails?.admins.some(
+    (admin: GroupMember | string) =>
+      (typeof admin === 'object' && auth?.user?._id && admin._id === auth.user._id) ||
+      (typeof admin === 'string' && auth?.user?._id && admin === auth.user._id)
+  );
+
   if (!auth?.user?._id) {
     return (
       <div className="card">
@@ -898,7 +904,7 @@ const Chat: React.FC = () => {
                       </button>
                       {showGroupMenu && (
                         <div className="dropdown-menu show p-0 mt-2" style={{ right: 0, left: 'auto', minWidth: 180, zIndex: 1000, position: 'absolute' }}>
-                          {groupDetails?.admins.includes(auth.user._id) ? (
+                          {isAdmin ? (
                             <>
                               <button className="dropdown-item" onClick={() => { setShowAddMemberModal(true); setShowGroupMenu(false); }}>Add Member</button>
                               <button className="dropdown-item" onClick={() => { setShowRemoveMemberModal(true); setShowGroupMenu(false); }}>Remove Member</button>
@@ -1068,11 +1074,29 @@ const Chat: React.FC = () => {
                 </div>
                 <div className="modal-body">
                   <label className="form-label">Select users to add</label>
-                  <select className="form-select" multiple value={selectedAddMembers} onChange={e => setSelectedAddMembers(Array.from(e.target.selectedOptions, o => o.value))}>
-                    {users.filter(u => !groupDetails.members.some((m: GroupMember | string) => typeof m === 'object' && m._id === u._id)).map(u => (
-                      <option key={u._id} value={u._id}>{u.name} ({u.email})</option>
-                    ))}
-                  </select>
+                  <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+                    {users
+                      .filter(u => !groupDetails.members.some((m: GroupMember | string) => typeof m === 'object' && m._id === u._id))
+                      .map(u => (
+                        <div key={u._id} className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id={`add-user-checkbox-${u._id}`}
+                            value={u._id}
+                            checked={selectedAddMembers.includes(u._id)}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedAddMembers(prev => [...prev, u._id]);
+                              } else {
+                                setSelectedAddMembers(prev => prev.filter(id => id !== u._id));
+                              }
+                            }}
+                          />
+                          <label className="form-check-label" htmlFor={`add-user-checkbox-${u._id}`}>{u.name} ({u.email})</label>
+                        </div>
+                      ))}
+                  </div>
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-light" onClick={() => setShowAddMemberModal(false)}>Cancel</button>
@@ -1123,10 +1147,11 @@ const Chat: React.FC = () => {
                 <div><strong>Group Name:</strong> {groupDetails.name}</div>
                 <div className="mt-2"><strong>Admins:</strong></div>
                 <ul>
-                  {groupDetails.admins.map(aid => {
-                    const admin = groupDetails.members.find((m: GroupMember | string) => typeof m === 'object' && m._id === aid) as GroupMember | undefined;
-                    return admin ? <li key={aid}>{admin.name} ({admin.email})</li> : null;
-                  })}
+                  {groupDetails.admins.map((admin: GroupMember | string) =>
+                    typeof admin === 'object' && admin !== null && 'name' in admin && 'email' in admin ? (
+                      <li key={admin._id}>{admin.name} ({admin.email})</li>
+                    ) : null
+                  )}
                 </ul>
                 <div className="mt-2"><strong>Members:</strong></div>
                 <ul>

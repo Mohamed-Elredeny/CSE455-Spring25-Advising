@@ -7,7 +7,8 @@ const {
   addMembers,
   removeMembers,
   updateAdmins,
-  leaveGroup
+  leaveGroup,
+  updateGroup
 } = require('../controllers/groupController');
 
 const router = express.Router();
@@ -26,5 +27,7 @@ router.put('/:groupId/remove', auth, removeMembers);
 router.put('/:groupId/admin', auth, updateAdmins);
 // Leave group (any member)
 router.put('/:groupId/leave', auth, leaveGroup);
+// Update group
+router.put('/:groupId', auth, updateGroup);
 
 module.exports = router; 
