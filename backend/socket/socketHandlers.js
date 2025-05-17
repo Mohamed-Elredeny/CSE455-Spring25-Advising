@@ -1,3 +1,5 @@
+const Group = require('../models/groupModel');
+
 let onlineUsers = [];
 
 const getReceiverSocket = (io, receiverId) => {
@@ -132,6 +134,39 @@ const handleMessageDelete = (io, socket) => {
     });
 };
 
+const handleGroupChat = (io, socket) => {
+    // Join a group room
+    socket.on('joinGroup', async (groupId) => {
+        try {
+            const group = await Group.findById(groupId);
+            if (group && group.members.map(String).includes(String(socket.user.userId))) {
+                socket.join(groupId);
+            }
+        } catch (e) {}
+    });
+
+    // Leave a group room
+    socket.on('leaveGroup', (groupId) => {
+        socket.leave(groupId);
+    });
+
+    // Send group message
+    socket.on('groupMessage', (msg) => {
+        // msg should include groupId, senderId, content, etc.
+        io.to(msg.groupId).emit('groupMessage', msg);
+    });
+
+    // Edit group message
+    socket.on('groupMessageUpdate', ({ messageId, content, groupId }) => {
+        io.to(groupId).emit('groupMessageUpdate', { messageId, content, edited: true, groupId });
+    });
+
+    // Delete group message
+    socket.on('groupMessageDelete', ({ messageId, groupId }) => {
+        io.to(groupId).emit('groupMessageDelete', { messageId, groupId });
+    });
+};
+
 const handleDisconnect = (socket, io) => {
     socket.on('disconnect', () => {
         try {
@@ -167,6 +202,7 @@ const setupSocketHandlers = (io) => {
         handleMessage(socket);
         handleMessageUpdate(socket);
         handleMessageDelete(io, socket);
+        handleGroupChat(io, socket);
         handleDisconnect(socket, io);
         handleError(socket);
     });

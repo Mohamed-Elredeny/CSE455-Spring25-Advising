@@ -32,6 +32,18 @@ interface User {
   unreadCount?: number;
 }
 
+interface Group {
+  _id: string;
+  name: string;
+  members: string[];
+}
+
+interface GroupMember {
+  _id: string;
+  name: string;
+  email: string;
+}
+
 const Chat: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const location = useLocation();
@@ -54,6 +66,16 @@ const Chat: React.FC = () => {
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [userListError, setUserListError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [isLoadingGroups, setIsLoadingGroups] = useState(true);
+  const [groupListError, setGroupListError] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [groupMessages, setGroupMessages] = useState<Message[]>([]);
+  const [groupDetails, setGroupDetails] = useState<Group & { admins: string[]; members: User[]; createdBy: string } | null>(null);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [showRemoveMemberModal, setShowRemoveMemberModal] = useState(false);
+  const [selectedAddMembers, setSelectedAddMembers] = useState<string[]>([]);
+  const [selectedRemoveMembers, setSelectedRemoveMembers] = useState<string[]>([]);
 
   // Only show user list if on /chat/private
   const isPrivateChatList = location.pathname === '/chat/private';
@@ -413,6 +435,243 @@ const Chat: React.FC = () => {
     }
   }, [auth?.token, auth?.user?._id, fetchUsers]);
 
+  // Fetch groups
+  useEffect(() => {
+    if (!auth?.token) return;
+    setIsLoadingGroups(true);
+    setGroupListError(null);
+    axios.get(`${import.meta.env.VITE_API_URL}/group`, {
+      headers: { Authorization: `Bearer ${auth.token}` }
+    })
+      .then(res => {
+        setGroups(res.data || []);
+      })
+      .catch(() => setGroupListError('Failed to load groups.'))
+      .finally(() => setIsLoadingGroups(false));
+  }, [auth?.token]);
+
+  // Fetch group messages when selectedGroup changes
+  useEffect(() => {
+    if (selectedGroup && auth?.token && auth?.user?._id) {
+      axios.get(`${import.meta.env.VITE_API_URL}/messages/group/${selectedGroup._id}`, {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      })
+        .then(res => {
+          setGroupMessages(Array.isArray(res.data) ? res.data : []);
+        })
+    } else {
+      setGroupMessages([]);
+    }
+  }, [selectedGroup, auth?.token, auth?.user?._id]);
+
+  // Fetch group details when selectedGroup changes
+  useEffect(() => {
+    if (selectedGroup && auth?.token) {
+      axios.get(`${import.meta.env.VITE_API_URL}/group/${selectedGroup._id}`, {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      })
+        .then(res => setGroupDetails(res.data))
+        .catch(() => setGroupDetails(null));
+    } else {
+      setGroupDetails(null);
+    }
+  }, [selectedGroup, auth?.token]);
+
+  // Socket: join/leave group room and handle real-time group events
+  useEffect(() => {
+    if (!socket || !selectedGroup) return;
+    socket.emit('joinGroup', selectedGroup._id);
+    const handleGroupMessage = (msg: Message) => {
+      setGroupMessages(prev => {
+        if (prev.some(m => m._id === msg._id)) return prev;
+        const type: 'in' | 'out' = auth?.user?._id && msg.senderId === auth.user._id ? 'out' : 'in';
+        const newMsg: Message = { ...msg, type };
+        const sorted = [...prev, newMsg].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        return sorted;
+      });
+    };
+    const handleGroupMessageUpdate = (data: { messageId: string; content: string; edited?: boolean }) => {
+      setGroupMessages(prev => prev.map(msg =>
+        msg._id === data.messageId ? { ...msg, content: data.content, edited: !!data.edited } : msg
+      ));
+    };
+    const handleGroupMessageDelete = (data: { messageId: string }) => {
+      setGroupMessages(prev => prev.map(msg =>
+        msg._id === data.messageId ? { ...msg, deleted: true } : msg
+      ));
+    };
+    socket.on('groupMessage', handleGroupMessage);
+    socket.on('groupMessageUpdate', handleGroupMessageUpdate);
+    socket.on('groupMessageDelete', handleGroupMessageDelete);
+    return () => {
+      socket.emit('leaveGroup', selectedGroup._id);
+      socket.off('groupMessage', handleGroupMessage);
+      socket.off('groupMessageUpdate', handleGroupMessageUpdate);
+      socket.off('groupMessageDelete', handleGroupMessageDelete);
+    };
+  }, [socket, selectedGroup]);
+
+  // Send group message
+  const sendGroupMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if ((!newMessage.trim() && !selectedFile) || !socket || !selectedGroup || !auth?.user?._id) return;
+    try {
+      let fileUrl = '';
+      let fileName = '';
+      if (selectedFile) {
+        try {
+          fileUrl = await uploadFile(selectedFile);
+          fileName = selectedFile.name;
+        } catch (error) {
+          alert('Failed to upload file. Please try again.');
+          return;
+        }
+      }
+      const messageData = {
+        senderId: auth.user._id,
+        groupId: selectedGroup._id,
+        content: newMessage,
+        ...(fileUrl && { fileUrl, fileName })
+      };
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/messages/group`,
+        messageData,
+        {
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+          },
+        }
+      );
+      socket.emit('groupMessage', response.data);
+      setNewMessage('');
+      setSelectedFile(null);
+    } catch (error) {
+      console.error('Error sending group message:', error);
+      alert('Failed to send message. Please try again.');
+    }
+  };
+
+  // Edit group message
+  const handleEditGroupMessage = async (messageId: string, newContent: string) => {
+    if (!auth?.token || !newContent.trim() || !selectedGroup) return;
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/messages/group/${messageId}`,
+        { content: newContent, edited: true },
+        {
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+          },
+        }
+      );
+      setGroupMessages(prev =>
+        prev.map(msg =>
+          msg._id === messageId ? { ...msg, content: newContent, edited: true } : msg
+        )
+      );
+      socket?.emit('groupMessageUpdate', {
+        messageId,
+        content: newContent,
+        edited: true,
+        groupId: selectedGroup._id
+      });
+      setEditingMessageId(null);
+      setEditMessageContent('');
+    } catch (error) {
+      console.error('Error updating group message:', error);
+      alert('Failed to update message');
+    }
+  };
+
+  // Delete group message
+  const handleDeleteGroupMessage = async (messageId: string) => {
+    if (!auth?.token || !selectedGroup) return;
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/messages/group/${messageId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+          },
+        }
+      );
+      setGroupMessages(prev => prev.map(msg =>
+        msg._id === messageId ? { ...msg, deleted: true } : msg
+      ));
+      socket?.emit('groupMessageDelete', {
+        messageId,
+        groupId: selectedGroup._id
+      });
+    } catch (error) {
+      console.error('Error deleting group message:', error);
+      alert('Failed to delete message. Please try again.');
+    }
+  };
+
+  const handleCreateGroup = async (groupName: string, memberIds: string[]) => {
+    if (!auth?.token || !auth?.user?._id) return;
+    // Ensure the creator is included
+    const allMembers = Array.from(new Set([...memberIds, auth.user._id]));
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/group`,
+        { name: groupName, members: allMembers },
+        { headers: { Authorization: `Bearer ${auth.token}` } }
+      );
+      setGroups(prev => [...prev, response.data]);
+      setSelectedGroup(response.data);
+      setSelectedUser(null);
+    } catch (error) {
+      alert('Failed to create group.');
+    }
+  };
+
+  // Add members to group
+  const handleAddMembers = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth?.token || !groupDetails || selectedAddMembers.length === 0) return;
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/group/${groupDetails._id}/add`,
+        { members: selectedAddMembers },
+        { headers: { Authorization: `Bearer ${auth.token}` } }
+      );
+      // Refetch group details
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/group/${groupDetails._id}`, {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      });
+      setGroupDetails(res.data);
+      setGroups(prev => prev.map(g => g._id === res.data._id ? res.data : g));
+      setShowAddMemberModal(false);
+      setSelectedAddMembers([]);
+    } catch (error) {
+      alert('Failed to add members.');
+    }
+  };
+
+  // Remove members from group
+  const handleRemoveMembers = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth?.token || !groupDetails || selectedRemoveMembers.length === 0) return;
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/group/${groupDetails._id}/remove`,
+        { members: selectedRemoveMembers },
+        { headers: { Authorization: `Bearer ${auth.token}` } }
+      );
+      // Refetch group details
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/group/${groupDetails._id}`, {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      });
+      setGroupDetails(res.data);
+      setGroups(prev => prev.map(g => g._id === res.data._id ? res.data : g));
+      setShowRemoveMemberModal(false);
+      setSelectedRemoveMembers([]);
+    } catch (error) {
+      alert('Failed to remove members.');
+    }
+  };
+
   if (!auth?.user?._id) {
     return (
       <div className="card">
@@ -431,15 +690,15 @@ const Chat: React.FC = () => {
       {isPrivateChatList ? (
         <div style={{ display: 'flex', width: '100%' }}>
           <div style={{ width: 300, minWidth: 300 }}>
-            {isLoadingUsers ? (
+            {isLoadingUsers || isLoadingGroups ? (
               <div className="d-flex justify-content-center py-10">
                 <div className="spinner-border text-primary" role="status">
                   <span className="visually-hidden">Loading...</span>
                 </div>
               </div>
-            ) : userListError ? (
+            ) : userListError || groupListError ? (
               <div className="alert alert-danger">
-                {userListError}
+                {userListError || groupListError}
                 <button className="btn btn-sm btn-light ms-3" onClick={fetchUsers}>
                   Retry
                 </button>
@@ -447,9 +706,16 @@ const Chat: React.FC = () => {
             ) : (
               <ChatSidebar
                 users={users}
-                onUserSelect={(user) => {
+                groups={groups}
+                onUserSelect={user => {
                   setSelectedUser(user);
+                  setSelectedGroup(null);
                 }}
+                onGroupSelect={group => {
+                  setSelectedGroup(group);
+                  setSelectedUser(null);
+                }}
+                onCreateGroup={handleCreateGroup}
                 shouldNavigate={false}
               />
             )}
@@ -519,6 +785,83 @@ const Chat: React.FC = () => {
                   />
                 </div>
               </div>
+            ) : selectedGroup ? (
+              <div className="card mx-auto my-8 w-100 mw-1000px shadow" id="kt_chat_messenger">
+                <div className="chat-header">
+                  <div className="d-flex justify-content-between align-items-center h-100">
+                    <div className="d-flex align-items-center">
+                      <div className="symbol symbol-35px symbol-circle me-3">
+                        <span className="symbol-label bg-light-info text-info">
+                          {selectedGroup.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="fs-4 text-dark mb-0">{selectedGroup.name}</h3>
+                        <div className="d-flex align-items-center flex-wrap gap-2">
+                          <span className="fs-7 text-muted">Members:</span>
+                          {groupDetails?.members.map((m: GroupMember | string) =>
+                            typeof m === 'object' && m !== null && 'name' in m && '_id' in m ? (
+                              <span key={m._id} className="badge bg-light-info text-info fw-bold me-1">{m.name}</span>
+                            ) : null
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {groupDetails?.admins.includes(auth.user._id) && (
+                      <div className="d-flex gap-2">
+                        <button className="btn btn-sm btn-light-info" onClick={() => setSelectedGroup(null)}>
+                          <i className="ki-duotone ki-cross-square fs-2">
+                            <span className="path1"></span>
+                            <span className="path2"></span>
+                          </i>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="card-body p-0">
+                  <div
+                    className="messages-wrapper scroll-y me-n5 pe-5"
+                    data-kt-element="messages"
+                    data-kt-scroll="true"
+                    data-kt-scroll-activate="{default: false, lg: true}"
+                    data-kt-scroll-max-height="auto"
+                    data-kt-scroll-dependencies="#kt_header, #kt_app_header, #kt_app_toolbar, #kt_toolbar, #kt_footer, #kt_app_footer, #kt_chat_messenger_header, #kt_chat_messenger_footer"
+                    data-kt-scroll-wrappers="#kt_content, #kt_app_content, #kt_chat_messenger_body"
+                    data-kt-scroll-offset="5px"
+                    style={{ height: 'calc(100vh - 400px)' }}
+                  >
+                    <MessageList
+                      messages={groupMessages}
+                      currentUserId={auth.user._id}
+                      userName={selectedGroup.name}
+                      onEdit={(messageId, content) => {
+                        setEditingMessageId(messageId);
+                        setEditMessageContent(content);
+                      }}
+                      onDelete={handleDeleteGroupMessage}
+                      editingMessageId={editingMessageId}
+                      editContent={editMessageContent}
+                      onEditContentChange={setEditMessageContent}
+                      onEditSubmit={() => handleEditGroupMessage(editingMessageId!, editMessageContent)}
+                      onEditCancel={() => {
+                        setEditingMessageId(null);
+                        setEditMessageContent('');
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="card-footer pt-4" id="kt_chat_messenger_footer">
+                  <ChatInput
+                    newMessage={newMessage}
+                    onMessageChange={setNewMessage}
+                    onFileSelect={setSelectedFile}
+                    onSend={sendGroupMessage}
+                    selectedFile={selectedFile}
+                    isUploading={isUploading}
+                  />
+                </div>
+              </div>
             ) : (
               <div className="text-center w-100">
                 <i className="ki-duotone ki-message-text-2 fs-5tx text-primary mb-5">
@@ -527,7 +870,7 @@ const Chat: React.FC = () => {
                   <span className="path3"></span>
                 </i>
                 <h3 className="text-gray-800 mb-2">Select a chat to start messaging</h3>
-                <div className="text-muted">Choose from your contacts list to start a conversation</div>
+                <div className="text-muted">Choose from your contacts list or groups to start a conversation</div>
               </div>
             )}
           </div>
@@ -612,6 +955,60 @@ const Chat: React.FC = () => {
             </i>
             <h3 className="text-gray-800 mb-2">Select a chat to start messaging</h3>
             <div className="text-muted">Choose from your contacts list to start a conversation</div>
+          </div>
+        </div>
+      )}
+      {showAddMemberModal && groupDetails && (
+        <div className="modal show d-block" tabIndex={-1}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <form onSubmit={handleAddMembers}>
+                <div className="modal-header">
+                  <h5 className="modal-title">Add Members</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowAddMemberModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <label className="form-label">Select users to add</label>
+                  <select className="form-select" multiple value={selectedAddMembers} onChange={e => setSelectedAddMembers(Array.from(e.target.selectedOptions, o => o.value))}>
+                    {users.filter(u => !groupDetails.members.some((m: GroupMember | string) => typeof m === 'object' && m._id === u._id)).map(u => (
+                      <option key={u._id} value={u._id}>{u.name} ({u.email})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-light" onClick={() => setShowAddMemberModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" disabled={selectedAddMembers.length === 0}>Add</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+      {showRemoveMemberModal && groupDetails && (
+        <div className="modal show d-block" tabIndex={-1}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <form onSubmit={handleRemoveMembers}>
+                <div className="modal-header">
+                  <h5 className="modal-title">Remove Members</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowRemoveMemberModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <label className="form-label">Select members to remove</label>
+                  <select className="form-select" multiple value={selectedRemoveMembers} onChange={e => setSelectedRemoveMembers(Array.from(e.target.selectedOptions, o => o.value))}>
+                    {groupDetails.members.filter((m: GroupMember | string) => typeof m === 'object' && m._id !== auth.user._id).map((m: GroupMember | string) => (
+                      typeof m === 'object' && m !== null && 'name' in m && '_id' in m ? (
+                        <option key={m._id} value={m._id}>{m.name} ({m.email})</option>
+                      ) : null
+                    ))}
+                  </select>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-light" onClick={() => setShowRemoveMemberModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-danger" disabled={selectedRemoveMembers.length === 0}>Remove</button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

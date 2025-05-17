@@ -10,6 +10,7 @@ const chatRoute = require('./routes/chatRoute.js');
 const userRoute = require('./routes/userRoute.js');
 const messageRoute = require('./routes/messageRoute.js');
 const uploadRoute = require('./routes/uploadRoute.js');
+const groupRoute = require('./routes/groupRoute.js');
 const initializeSocket = require('./socket/socketConfig.js');
 const setupSocketHandlers = require('./socket/socketHandlers.js');
 
@@ -34,6 +35,7 @@ app.use("/user", userRoute);
 app.use("/chats", chatRoute);
 app.use("/messages", messageRoute);
 app.use("/upload", uploadRoute);
+app.use('/group', groupRoute);
 
 const start = async () => {
     try {

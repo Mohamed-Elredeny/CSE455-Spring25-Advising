@@ -6,9 +6,15 @@ const messageSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    groupId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Group',
+        default: null,
+        index: true
+    },
     receiverId: {
         type: String,
-        required: true,
+        required: false,
         index: true
     },
     content: {

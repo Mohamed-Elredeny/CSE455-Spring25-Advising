@@ -1,4 +1,5 @@
 const messageModel = require('../models/messageModel');
+const Group = require('../models/groupModel');
 
 const createMessage = async (req, res) => {
     const { senderId, receiverId, content, fileUrl, fileName } = req.body;
@@ -114,9 +115,104 @@ const deleteMessage = async (req, res) => {
     }
 };
 
+// Send a message to a group
+const createGroupMessage = async (req, res) => {
+    const { groupId, content, fileUrl, fileName } = req.body;
+    const senderId = req.user._id;
+    if (!groupId || (!content && !fileUrl)) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+    try {
+        const group = await Group.findById(groupId);
+        if (!group) return res.status(404).json({ message: 'Group not found' });
+        if (!group.members.map(String).includes(String(senderId))) {
+            return res.status(403).json({ message: 'Not a group member' });
+        }
+        const message = new messageModel({
+            senderId,
+            groupId,
+            content: content || 'Sent an attachment',
+            type: 'out',
+            ...(fileUrl && { fileUrl, fileName })
+        });
+        const savedMessage = await message.save();
+        res.status(201).json(savedMessage);
+    } catch (error) {
+        res.status(500).json({ message: 'Error sending group message', error: error.message });
+    }
+};
+
+// Get all messages for a group
+const getGroupMessages = async (req, res) => {
+    const { groupId } = req.params;
+    const userId = req.user._id;
+    try {
+        const group = await Group.findById(groupId);
+        if (!group) return res.status(404).json({ message: 'Group not found' });
+        if (!group.members.map(String).includes(String(userId))) {
+            return res.status(403).json({ message: 'Not a group member' });
+        }
+        const messages = await messageModel.find({ groupId }).sort({ createdAt: 1 }).lean();
+        res.json(messages.map(msg => ({ ...msg, type: msg.senderId == userId ? 'out' : 'in' })));
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching group messages', error: error.message });
+    }
+};
+
+// Edit a group message (sender or admin only)
+const updateGroupMessage = async (req, res) => {
+    try {
+        const message = await messageModel.findById(req.params.messageId);
+        if (!message || !message.groupId) {
+            return res.status(404).json({ message: 'Group message not found' });
+        }
+        const group = await Group.findById(message.groupId);
+        if (!group) return res.status(404).json({ message: 'Group not found' });
+        if (
+            message.senderId.toString() !== req.user._id.toString() &&
+            !group.admins.map(String).includes(String(req.user._id))
+        ) {
+            return res.status(403).json({ message: 'Not authorized to edit this message' });
+        }
+        message.content = req.body.content;
+        message.edited = true;
+        await message.save();
+        res.json(message);
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating group message', error: error.message });
+    }
+};
+
+// Delete a group message (sender or admin only)
+const deleteGroupMessage = async (req, res) => {
+    try {
+        const message = await messageModel.findById(req.params.messageId);
+        if (!message || !message.groupId) {
+            return res.status(404).json({ message: 'Group message not found' });
+        }
+        const group = await Group.findById(message.groupId);
+        if (!group) return res.status(404).json({ message: 'Group not found' });
+        if (
+            message.senderId.toString() !== req.user._id.toString() &&
+            !group.admins.map(String).includes(String(req.user._id))
+        ) {
+            return res.status(403).json({ message: 'Not authorized to delete this message' });
+        }
+        message.deleted = true;
+        await message.save();
+        res.json(message);
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting group message', error: error.message });
+    }
+};
+
 module.exports = {
     createMessage,
     getMessages,
     updateMessage,
-    deleteMessage
+    deleteMessage,
+    createGroupMessage,
+    getGroupMessages,
+    updateGroupMessage,
+    deleteGroupMessage
 };
