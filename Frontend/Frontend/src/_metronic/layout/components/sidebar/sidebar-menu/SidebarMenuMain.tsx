@@ -18,7 +18,7 @@ const SidebarMenuMain = () => {
         <SidebarMenuItem
           to="/chat/private"
           icon="user"
-          title="Private Chat"
+          title="All Chats"
           fontIcon="bi-person"
         />
       </SidebarMenuItemWithSub>

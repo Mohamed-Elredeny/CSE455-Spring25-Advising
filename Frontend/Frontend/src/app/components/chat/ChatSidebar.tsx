@@ -56,7 +56,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ users, groups, onUserSelect, 
 
   return (
     <div className="chat-sidebar px-4">
-      <h3 className="card-label mb-2">Private Chats</h3>
+      <h3 className="card-label mb-2">All Chats</h3>
       <UserList users={users} onUserSelect={handleUserSelect} />
       <div className="d-flex align-items-center justify-content-between mt-6 mb-2">
         <h3 className="card-label mb-0">Groups</h3>
