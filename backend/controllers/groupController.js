@@ -79,10 +79,67 @@ const removeMembers = async (req, res) => {
   }
 };
 
+// Assign or remove admin (admin only)
+const updateAdmins = async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.groupId);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+    if (!group.admins.map(String).includes(String(req.user._id))) {
+      return res.status(403).json({ message: 'Only admins can assign/remove admins' });
+    }
+    const { userId, action } = req.body; // action: 'add' or 'remove'
+    if (!userId || !['add', 'remove'].includes(action)) {
+      return res.status(400).json({ message: 'Invalid request' });
+    }
+    if (action === 'add' && !group.admins.map(String).includes(String(userId))) {
+      group.admins.push(userId);
+    } else if (action === 'remove') {
+      group.admins = group.admins.filter(a => String(a) !== String(userId));
+      // Prevent removing last admin
+      if (group.admins.length === 0) {
+        return res.status(400).json({ message: 'At least one admin required' });
+      }
+    }
+    await group.save();
+    res.json(group);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating admins', error: error.message });
+  }
+};
+
+// Leave group (any member)
+const leaveGroup = async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.groupId);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+    const userId = req.user._id;
+    // Remove from members
+    group.members = group.members.filter(m => String(m) !== String(userId));
+    // Remove from admins
+    group.admins = group.admins.filter(a => String(a) !== String(userId));
+    // If no members left, delete the group
+    if (group.members.length === 0) {
+      await group.deleteOne();
+      return res.json({ message: 'Group deleted (no members left)' });
+    }
+    // Prevent leaving if last admin and members remain
+    if (group.admins.length === 0 && group.members.length > 0) {
+      // Assign first member as new admin
+      group.admins = [group.members[0]];
+    }
+    await group.save();
+    res.json({ message: 'Left group', group });
+  } catch (error) {
+    res.status(500).json({ message: 'Error leaving group', error: error.message });
+  }
+};
+
 module.exports = {
   createGroup,
   getUserGroups,
   getGroup,
   addMembers,
-  removeMembers
+  removeMembers,
+  updateAdmins,
+  leaveGroup
 }; 

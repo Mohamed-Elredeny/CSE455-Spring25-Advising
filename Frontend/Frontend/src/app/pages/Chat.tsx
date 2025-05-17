@@ -76,6 +76,10 @@ const Chat: React.FC = () => {
   const [showRemoveMemberModal, setShowRemoveMemberModal] = useState(false);
   const [selectedAddMembers, setSelectedAddMembers] = useState<string[]>([]);
   const [selectedRemoveMembers, setSelectedRemoveMembers] = useState<string[]>([]);
+  const [showGroupMenu, setShowGroupMenu] = useState(false);
+  const [showGroupDetailsModal, setShowGroupDetailsModal] = useState(false);
+  const [showRenameGroupModal, setShowRenameGroupModal] = useState(false);
+  const [renameGroupName, setRenameGroupName] = useState('');
 
   // Only show user list if on /chat/private
   const isPrivateChatList = location.pathname === '/chat/private';
@@ -672,6 +676,63 @@ const Chat: React.FC = () => {
     }
   };
 
+  // Assign admin
+  const handleMakeAdmin = async (userId: string) => {
+    if (!auth?.token || !groupDetails) return;
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/group/${groupDetails._id}/admin`,
+        { userId, action: 'add' },
+        { headers: { Authorization: `Bearer ${auth.token}` } }
+      );
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/group/${groupDetails._id}`, {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      });
+      setGroupDetails(res.data);
+      setGroups(prev => prev.map(g => g._id === res.data._id ? res.data : g));
+    } catch (error) {
+      alert('Failed to assign admin.');
+    }
+  };
+
+  // Remove admin
+  const handleRemoveAdmin = async (userId: string) => {
+    if (!auth?.token || !groupDetails) return;
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/group/${groupDetails._id}/admin`,
+        { userId, action: 'remove' },
+        { headers: { Authorization: `Bearer ${auth.token}` } }
+      );
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/group/${groupDetails._id}`, {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      });
+      setGroupDetails(res.data);
+      setGroups(prev => prev.map(g => g._id === res.data._id ? res.data : g));
+    } catch (error) {
+      alert('Failed to remove admin.');
+    }
+  };
+
+  // Leave group
+  const handleLeaveGroup = async () => {
+    if (!auth?.token || !groupDetails) return;
+    if (!window.confirm('Are you sure you want to leave this group?')) return;
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/group/${groupDetails._id}/leave`,
+        {},
+        { headers: { Authorization: `Bearer ${auth.token}` } }
+      );
+      setGroups(prev => prev.filter(g => g._id !== groupDetails._id));
+      setSelectedGroup(null);
+      setGroupDetails(null);
+      setGroupMessages([]);
+    } catch (error) {
+      alert('Failed to leave group.');
+    }
+  };
+
   if (!auth?.user?._id) {
     return (
       <div className="card">
@@ -801,7 +862,21 @@ const Chat: React.FC = () => {
                           <span className="fs-7 text-muted">Members:</span>
                           {groupDetails?.members.map((m: GroupMember | string) =>
                             typeof m === 'object' && m !== null && 'name' in m && '_id' in m ? (
-                              <span key={m._id} className="badge bg-light-info text-info fw-bold me-1">{m.name}</span>
+                              <span key={m._id} className="badge bg-light-info text-info fw-bold me-1 d-flex align-items-center">
+                                {m.name}
+                                {groupDetails.admins.includes(m._id) && <span className="ms-1 text-warning">★</span>}
+                                {groupDetails.admins.includes(auth.user._id) && m._id !== auth.user._id && (
+                                  <>
+                                    {!groupDetails.admins.includes(m._id) && (
+                                      <button className="btn btn-xs btn-link text-primary ms-1 p-0" title="Make Admin" onClick={() => handleMakeAdmin(m._id)}>Make Admin</button>
+                                    )}
+                                    {groupDetails.admins.length > 1 && groupDetails.admins.includes(m._id) && (
+                                      <button className="btn btn-xs btn-link text-danger ms-1 p-0" title="Remove Admin" onClick={() => handleRemoveAdmin(m._id)}>Remove Admin</button>
+                                    )}
+                                    <button className="btn btn-xs btn-link text-danger ms-1 p-0" title="Remove Member" onClick={() => { setSelectedRemoveMembers([m._id]); setShowRemoveMemberModal(true); }}>Remove</button>
+                                  </>
+                                )}
+                              </span>
                             ) : null
                           )}
                         </div>
@@ -817,6 +892,30 @@ const Chat: React.FC = () => {
                         </button>
                       </div>
                     )}
+                    <div className="position-relative ms-2">
+                      <button className="btn btn-sm btn-light" onClick={() => setShowGroupMenu(v => !v)} title="Group Options">
+                        <i className="bi bi-list" style={{ fontSize: 24 }} />
+                      </button>
+                      {showGroupMenu && (
+                        <div className="dropdown-menu show p-0 mt-2" style={{ right: 0, left: 'auto', minWidth: 180, zIndex: 1000, position: 'absolute' }}>
+                          {groupDetails?.admins.includes(auth.user._id) ? (
+                            <>
+                              <button className="dropdown-item" onClick={() => { setShowAddMemberModal(true); setShowGroupMenu(false); }}>Add Member</button>
+                              <button className="dropdown-item" onClick={() => { setShowRemoveMemberModal(true); setShowGroupMenu(false); }}>Remove Member</button>
+                              <button className="dropdown-item" onClick={() => { setShowRenameGroupModal(true); setShowGroupMenu(false); }}>Rename Group</button>
+                              <div className="dropdown-divider"></div>
+                              <button className="dropdown-item" onClick={() => { setShowGroupDetailsModal(true); setShowGroupMenu(false); }}>Group Details</button>
+                              <button className="dropdown-item text-danger" onClick={() => { setShowGroupMenu(false); handleLeaveGroup(); }}>Leave Group</button>
+                            </>
+                          ) : (
+                            <>
+                              <button className="dropdown-item" onClick={() => { setShowGroupDetailsModal(true); setShowGroupMenu(false); }}>Group Details</button>
+                              <button className="dropdown-item text-danger" onClick={() => { setShowGroupMenu(false); handleLeaveGroup(); }}>Leave Group</button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="card-body p-0">
@@ -1006,6 +1105,79 @@ const Chat: React.FC = () => {
                 <div className="modal-footer">
                   <button type="button" className="btn btn-light" onClick={() => setShowRemoveMemberModal(false)}>Cancel</button>
                   <button type="submit" className="btn btn-danger" disabled={selectedRemoveMembers.length === 0}>Remove</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+      {showGroupDetailsModal && groupDetails && (
+        <div className="modal show d-block" tabIndex={-1}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Group Details</h5>
+                <button type="button" className="btn-close" onClick={() => setShowGroupDetailsModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <div><strong>Group Name:</strong> {groupDetails.name}</div>
+                <div className="mt-2"><strong>Admins:</strong></div>
+                <ul>
+                  {groupDetails.admins.map(aid => {
+                    const admin = groupDetails.members.find((m: GroupMember | string) => typeof m === 'object' && m._id === aid) as GroupMember | undefined;
+                    return admin ? <li key={aid}>{admin.name} ({admin.email})</li> : null;
+                  })}
+                </ul>
+                <div className="mt-2"><strong>Members:</strong></div>
+                <ul>
+                  {groupDetails.members.map((m: GroupMember | string) =>
+                    typeof m === 'object' && m !== null && 'name' in m && '_id' in m ? (
+                      <li key={m._id}>{m.name} ({m.email})</li>
+                    ) : null
+                  )}
+                </ul>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-light" onClick={() => setShowGroupDetailsModal(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {showRenameGroupModal && groupDetails && (
+        <div className="modal show d-block" tabIndex={-1}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <form onSubmit={async e => {
+                e.preventDefault();
+                if (!auth?.token || !renameGroupName.trim()) return;
+                try {
+                  await axios.put(
+                    `${import.meta.env.VITE_API_URL}/group/${groupDetails._id}`,
+                    { name: renameGroupName.trim() },
+                    { headers: { Authorization: `Bearer ${auth.token}` } }
+                  );
+                  const res = await axios.get(`${import.meta.env.VITE_API_URL}/group/${groupDetails._id}`, {
+                    headers: { Authorization: `Bearer ${auth.token}` }
+                  });
+                  setGroupDetails(res.data);
+                  setGroups(prev => prev.map(g => g._id === res.data._id ? res.data : g));
+                  setShowRenameGroupModal(false);
+                } catch (error) {
+                  alert('Failed to rename group.');
+                }
+              }}>
+                <div className="modal-header">
+                  <h5 className="modal-title">Rename Group</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowRenameGroupModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <label className="form-label">New Group Name</label>
+                  <input type="text" className="form-control" value={renameGroupName} onChange={e => setRenameGroupName(e.target.value)} required />
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-light" onClick={() => setShowRenameGroupModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" disabled={!renameGroupName.trim()}>Rename</button>
                 </div>
               </form>
             </div>
