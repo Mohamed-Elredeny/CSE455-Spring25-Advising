@@ -119,10 +119,10 @@ const Chat: React.FC = () => {
             },
           }
         );
-          if (Array.isArray(response.data)) {
-            setMessages(response.data);
-          }
-        } catch (error) {
+        if (Array.isArray(response.data)) {
+          setMessages(response.data);
+        }
+      } catch (error) {
           setMessages([]);
         }
       };
@@ -833,7 +833,7 @@ const Chat: React.FC = () => {
           </div>
           <div className="flex-grow-1 d-flex align-items-center justify-content-center min-h-400px">
             {selectedUser ? (
-              <div className="card mx-auto my-8 w-100 mw-1000px shadow" id="kt_chat_messenger">
+    <div className="card mx-auto my-8 w-100 mw-1000px shadow" id="kt_chat_messenger">
                 <ChatHeader
                   chatUser={selectedUser}
                   isOnline={!!selectedUser.isOnline}
@@ -932,39 +932,37 @@ const Chat: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    {groupDetails?.admins.includes(auth.user._id) && (
-                      <div className="d-flex gap-2">
-                        <button className="btn btn-sm btn-light-info" onClick={() => setSelectedGroup(null)}>
-                          <i className="ki-duotone ki-cross-square fs-2">
-                            <span className="path1"></span>
-                            <span className="path2"></span>
-                          </i>
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="position-relative">
+                        <button className="btn btn-sm btn-light" onClick={() => setShowGroupMenu(v => !v)} title="Group Options">
+                          <i className="bi bi-list" style={{ fontSize: 24 }} />
                         </button>
+                        {showGroupMenu && (
+                          <div className="dropdown-menu show p-0 mt-2" style={{ right: 0, left: 'auto', minWidth: 180, zIndex: 1000, position: 'absolute' }}>
+                            {isAdmin ? (
+                              <>
+                                <button className="dropdown-item" onClick={() => { setShowAddMemberModal(true); setShowGroupMenu(false); }}>Add Member</button>
+                                <button className="dropdown-item" onClick={() => { setShowRemoveMemberModal(true); setShowGroupMenu(false); }}>Remove Member</button>
+                                <button className="dropdown-item" onClick={() => { setShowRenameGroupModal(true); setShowGroupMenu(false); }}>Rename Group</button>
+                                <div className="dropdown-divider"></div>
+                                <button className="dropdown-item" onClick={() => { setShowGroupDetailsModal(true); setShowGroupMenu(false); }}>Group Details</button>
+                                <button className="dropdown-item text-danger" onClick={() => { setShowGroupMenu(false); handleLeaveGroup(); }}>Leave Group</button>
+                              </>
+                            ) : (
+                              <>
+                                <button className="dropdown-item" onClick={() => { setShowGroupDetailsModal(true); setShowGroupMenu(false); }}>Group Details</button>
+                                <button className="dropdown-item text-danger" onClick={() => { setShowGroupMenu(false); handleLeaveGroup(); }}>Leave Group</button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
-                    <div className="position-relative ms-2">
-                      <button className="btn btn-sm btn-light" onClick={() => setShowGroupMenu(v => !v)} title="Group Options">
-                        <i className="bi bi-list" style={{ fontSize: 24 }} />
+                      <button className="btn btn-icon btn-active-light-info" onClick={() => setSelectedGroup(null)}>
+                        <i className="ki-duotone ki-cross-square fs-2">
+                          <span className="path1"></span>
+                          <span className="path2"></span>
+                        </i>
                       </button>
-                      {showGroupMenu && (
-                        <div className="dropdown-menu show p-0 mt-2" style={{ right: 0, left: 'auto', minWidth: 180, zIndex: 1000, position: 'absolute' }}>
-                          {isAdmin ? (
-                            <>
-                              <button className="dropdown-item" onClick={() => { setShowAddMemberModal(true); setShowGroupMenu(false); }}>Add Member</button>
-                              <button className="dropdown-item" onClick={() => { setShowRemoveMemberModal(true); setShowGroupMenu(false); }}>Remove Member</button>
-                              <button className="dropdown-item" onClick={() => { setShowRenameGroupModal(true); setShowGroupMenu(false); }}>Rename Group</button>
-                              <div className="dropdown-divider"></div>
-                              <button className="dropdown-item" onClick={() => { setShowGroupDetailsModal(true); setShowGroupMenu(false); }}>Group Details</button>
-                              <button className="dropdown-item text-danger" onClick={() => { setShowGroupMenu(false); handleLeaveGroup(); }}>Leave Group</button>
-                            </>
-                          ) : (
-                            <>
-                              <button className="dropdown-item" onClick={() => { setShowGroupDetailsModal(true); setShowGroupMenu(false); }}>Group Details</button>
-                              <button className="dropdown-item text-danger" onClick={() => { setShowGroupMenu(false); handleLeaveGroup(); }}>Leave Group</button>
-                            </>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>

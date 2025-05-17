@@ -95,7 +95,7 @@ const Message: React.FC<MessageProps> = ({
         ) : (
           <div className="d-flex">
             {message.type === 'in' && (
-              <div className="symbol symbol-35px symbol-circle me-3">
+              <div className="symbol symbol-35px symbol-circle me-3 ms-5">
                 <span className="symbol-label bg-light-info text-info fw-bolder">
                   {userName.charAt(0)?.toUpperCase()}
                 </span>
