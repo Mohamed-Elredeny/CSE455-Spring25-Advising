@@ -19,6 +19,23 @@ spec:
         image: ali142/dummy-data-service:latest
         ports:
         - containerPort: 5002
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 5002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 5002
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
         resources:
           limits:
             cpu: "0.5"

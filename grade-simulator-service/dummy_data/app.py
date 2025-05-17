@@ -310,6 +310,18 @@ def health_check():
     except Exception as e:
         return jsonify({"status": "unhealthy", "database": str(e)}), 500
 
+# API health check endpoint
+@app.route('/api/health')
+def api_health_check():
+    # Check database connection
+    try:
+        # Get a connection from the pool and immediately release it
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return jsonify({"status": "healthy", "database": "connected"})
+    except Exception as e:
+        return jsonify({"status": "unhealthy", "database": str(e)}), 500
+
 # Database cleanup on application exit
 @app.teardown_appcontext
 def shutdown_session(exception=None):
