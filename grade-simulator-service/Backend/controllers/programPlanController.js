@@ -1,38 +1,43 @@
-// Import necessary modules and models
-const { Op } = require('sequelize');
-const ProgramPlan = require('../models/ProgramPlan');
-const Course = require('../models/Course');
-const Grade = require('../models/Grade');
-const Student = require('../models/Student');
+// Import necessary modules
+const axios = require('axios');
+const { endpoints } = require('../config/pythonApi');
+
+// Helper function to handle API errors
+const handleApiError = (err, res) => {
+  console.error('API Error:', err);
+  if (err.response) {
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    return res.status(err.response.status).json(err.response.data);
+  } else if (err.request) {
+    // The request was made but no response was received
+    return res.status(503).json({ 
+      error: 'Python API service unavailable',
+      details: err.message
+    });
+  } else {
+    // Something happened in setting up the request that triggered an Error
+    return res.status(500).json({ 
+      error: 'Internal Server Error',
+      details: err.message
+    });
+  }
+};
 
 exports.getAllProgramPlans = async (req, res) => {
   try {
-    const plans = await ProgramPlan.findAll({
-      include: [
-        {
-          model: Course,
-          as: 'Course', // Ensuring we use the correct alias
-          include: [{ model: Course, as: 'Prerequisites' }],
-        },
-      ],
-    });
+    const response = await axios.get(endpoints.programPlans);
+    const plans = response.data;
     res.json(plans);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    handleApiError(err, res);
   }
 };
 
 exports.getProgramPlanById = async (req, res) => {
   try {
-    const plan = await ProgramPlan.findByPk(req.params.id, {
-      include: [
-        {
-          model: Course,
-          as: 'Course', // Ensure 'as' alias is used correctly
-          include: [{ model: Course, as: 'Prerequisites' }],
-        },
-      ],
-    });
+    const response = await axios.get(`${endpoints.programPlans}/${req.params.id}`);
+    const plan = response.data;
 
     if (!plan) {
       return res.status(404).json({ error: 'Program plan not found' });
@@ -40,7 +45,7 @@ exports.getProgramPlanById = async (req, res) => {
 
     res.json(plan);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    handleApiError(err, res);
   }
 };
 
@@ -49,32 +54,22 @@ exports.trackStudentProgramPlan = async (req, res) => {
 
   try {
     // Fetch student
-    const student = await Student.findByPk(student_id);
-    if (!student) return res.status(404).json({ error: 'Student not found' });
+    const studentResponse = await axios.get(`${endpoints.students}/${student_id}`);
+    const student = studentResponse.data;
 
     // Fetch student's program plan with courses and prerequisites
-    const programPlans = await ProgramPlan.findAll({
-      where: { program_id: student.program_id },
-      include: [
-        {
-          model: Course,
-          as: 'Course', // ✅ Ensure this matches association alias
-          include: [{ model: Course, as: 'Prerequisites' }], // ✅ Ensuring correct alias for prerequisites
-        },
-      ],
-    });
+    const programPlansResponse = await axios.get(`${endpoints.programPlan(student.program_id)}/detailed`);
+    const programPlans = programPlansResponse.data;
 
     // Fetch student's grades
-    const grades = await Grade.findAll({
-      where: { student_id },
-      include: [{ model: Course, as: 'Course' }],
-    });
+    const gradesResponse = await axios.get(endpoints.studentGrades(student_id));
+    const grades = gradesResponse.data;
 
     // Extract course IDs from the student's grades
     const takenCourses = grades.map(grade => ({
       course_id: grade.course_id,
-      course_name: grade.Course.name,
-      credits: grade.Course.credits,
+      course_name: grade.course.name,
+      credits: grade.course.credits,
       grade: grade.grade,
       percentage: grade.percentage,
       course_grade_points: grade.course_grade_points,
@@ -138,6 +133,6 @@ exports.trackStudentProgramPlan = async (req, res) => {
       remaining_courses: remainingCourses,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    handleApiError(err, res);
   }
 };

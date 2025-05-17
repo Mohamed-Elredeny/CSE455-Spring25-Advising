@@ -1,51 +1,56 @@
-const Grade = require('../models/Grade');
-const GPARule = require('../models/GPARule');
-const Course = require('../models/Course');
-const Student = require('../models/Student');
-const ProgramPlan = require('../models/ProgramPlan');
+const axios = require('axios');
+const { endpoints } = require('../config/pythonApi');
+
+// Helper function to handle API errors
+const handleApiError = (err, res) => {
+  console.error('API Error:', err);
+  if (err.response) {
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    return res.status(err.response.status).json(err.response.data);
+  } else if (err.request) {
+    // The request was made but no response was received
+    return res.status(503).json({ 
+      error: 'Python API service unavailable',
+      details: err.message
+    });
+  } else {
+    // Something happened in setting up the request that triggered an Error
+    return res.status(500).json({ 
+      error: 'Internal Server Error',
+      details: err.message
+    });
+  }
+};
 
 exports.calculateCGPA = async (req, res) => {
   const { student_id } = req.params;
   console.log("Student ID for CGPA calculation:", student_id);
 
   try {
-    const student = await Student.findByPk(student_id);
-    if (!student) {
-      console.log("Student not found:", student_id);
-      return res.status(404).json({ error: 'Student not found' });
-    }
+    // Check if student exists
+    const studentResponse = await axios.get(`${endpoints.students}/${student_id}`);
+    const student = studentResponse.data;
     console.log("Found student:", student.student_id);
 
-    // Check if any grades exist for this student without include
-    const gradeCount = await Grade.count({ where: { student_id } });
-    console.log("Grade count for student:", gradeCount);
-    
-    if (gradeCount === 0) {
-      console.log("No grades found in database for student:", student_id);
-      return res.status(404).json({ error: 'No grades found for this student' });
-    }
-    
-    // Fetch grades with the correct alias
-    const grades = await Grade.findAll({
-      where: { student_id },
-      include: [{ model: Course, as: 'course' }], // Corrected alias
-    });
-    console.log("Grades with include:", grades.length);
+    // Fetch grades from Python API
+    const gradesResponse = await axios.get(endpoints.studentGrades(student_id));
+    const grades = gradesResponse.data;
     
     if (!grades.length) {
-      return res.status(404).json({ error: 'No grades found for this student with course information' });
+      return res.status(404).json({ error: 'No grades found for this student' });
     }
 
     let totalCredits = 0;
     let totalGradePoints = 0;
 
     for (const grade of grades) {
-      if (!grade.course) { // Updated to use correct alias
+      if (!grade.course) {
         console.log("Warning: Course association missing for grade:", grade.grade_id);
         continue;
       }
       
-      const credits = grade.course.credits; // Updated to use correct alias
+      const credits = grade.course.credits;
       const gradePoints = parseFloat(grade.course_grade_points) || 0;
       
       console.log(`Adding: ${credits} credits, ${gradePoints} grade points for course ${grade.course_id}`);
@@ -62,8 +67,7 @@ exports.calculateCGPA = async (req, res) => {
     
     res.json({ student_id, cgpa });
   } catch (err) {
-    console.error("Error calculating CGPA:", err);
-    res.status(500).json({ error: err.message });
+    handleApiError(err, res);
   }
 };
 
@@ -80,29 +84,23 @@ exports.simulateCourseRetake = async (req, res) => {
     }
 
     try {
-      // Fetch student
-      console.log('Fetching student:', student_id);
-      const student = await Student.findByPk(student_id);
-      if (!student) return res.status(404).json({ error: 'Student not found' });
+      // Fetch student from Python API
+      const studentResponse = await axios.get(`${endpoints.students}/${student_id}`);
+      const student = studentResponse.data;
 
       // Fetch all courses in the simulation
       const courseIds = courses.map(c => c.course_id);
       const courseMap = new Map();
       
       for (const courseId of courseIds) {
-        const course = await Course.findByPk(courseId);
-        if (!course) return res.status(404).json({ error: `Course not found: ${courseId}` });
-        courseMap.set(courseId, course);
+        const courseResponse = await axios.get(endpoints.course(courseId));
+        courseMap.set(courseId, courseResponse.data);
       }
 
       // Check if all courses are in student's program plan
-      const programPlans = await ProgramPlan.findAll({
-        where: {
-          program_id: student.program_id,
-          course_id: courseIds
-        }
-      });
-
+      const programPlansResponse = await axios.get(endpoints.programPlan(student.program_id));
+      const programPlans = programPlansResponse.data;
+      
       const validCourseIds = new Set(programPlans.map(plan => plan.course_id));
       const invalidCourses = courseIds.filter(id => !validCourseIds.has(id));
       
@@ -115,9 +113,8 @@ exports.simulateCourseRetake = async (req, res) => {
 
       // Fetch GPA rules for all grades
       const grades = new Set(courses.map(c => c.new_grade));
-      const gpaRules = await GPARule.findAll({
-        where: { letter_grade: Array.from(grades) }
-      });
+      const gpaRulesResponse = await axios.get(endpoints.gpaRules);
+      const gpaRules = gpaRulesResponse.data;
       const gpaRuleMap = new Map(gpaRules.map(rule => [rule.letter_grade, rule]));
 
       // Validate all grades
@@ -129,13 +126,9 @@ exports.simulateCourseRetake = async (req, res) => {
         });
       }
 
-      // Fetch all student's grades
-      console.log('Fetching grades for student:', student_id);
-      const studentGrades = await Grade.findAll({
-        where: { student_id },
-        include: [{ model: Course, as: 'course' }],
-      });
-      console.log('Grades:', studentGrades);
+      // Fetch all student's grades from Python API
+      const gradesResponse = await axios.get(endpoints.studentGrades(student_id));
+      const studentGrades = gradesResponse.data;
 
       let totalCredits = 0;
       let totalGradePoints = 0;
@@ -185,8 +178,7 @@ exports.simulateCourseRetake = async (req, res) => {
         simulation_results: simulationResults
       });
     } catch (err) {
-      console.error('Error in simulateCourseRetake:', err);
-      res.status(500).json({ error: err.message });
+      handleApiError(err, res);
     }
     return;
   }
@@ -197,42 +189,31 @@ exports.simulateCourseRetake = async (req, res) => {
   }
 
   try {
-    // Fetch student
-    console.log('Fetching student:', student_id);
-    const student = await Student.findByPk(student_id);
-    if (!student) return res.status(404).json({ error: 'Student not found' });
+    // Fetch student from Python API
+    const studentResponse = await axios.get(`${endpoints.students}/${student_id}`);
+    const student = studentResponse.data;
 
-    // Fetch course
-    console.log('Fetching course:', course_id);
-    const course = await Course.findByPk(course_id);
-    if (!course) return res.status(404).json({ error: 'Course not found' });
+    // Fetch course from Python API
+    const courseResponse = await axios.get(endpoints.course(course_id));
+    const course = courseResponse.data;
 
     // Check if the course is in student's program plan
-    const programPlan = await ProgramPlan.findOne({
-      where: {
-        program_id: student.program_id,
-        course_id: course_id
-      }
-    });
-
+    const programPlansResponse = await axios.get(endpoints.programPlan(student.program_id));
+    const programPlans = programPlansResponse.data;
+    
+    const programPlan = programPlans.find(plan => plan.course_id === course_id);
     if (!programPlan) {
       return res.status(400).json({ error: 'Course is not in student\'s program plan' });
     }
 
     // Fetch GPA rule for the new grade
-    console.log('Fetching GPA rule for grade:', new_grade);
-    const gpaRule = await GPARule.findOne({ where: { letter_grade: new_grade } });
-    if (!gpaRule) return res.status(400).json({ error: 'Invalid grade' });
+    const gpaRuleResponse = await axios.get(endpoints.gpaRule(new_grade));
+    const gpaRule = gpaRuleResponse.data;
     const newGradePoints = gpaRule.gpa_points * course.credits;
-    console.log('New grade points:', newGradePoints);
 
-    // Fetch all student's grades
-    console.log('Fetching grades for student:', student_id);
-    const grades = await Grade.findAll({
-      where: { student_id },
-      include: [{ model: Course, as: 'course' }],
-    });
-    console.log('Grades:', grades);
+    // Fetch all student's grades from Python API
+    const gradesResponse = await axios.get(endpoints.studentGrades(student_id));
+    const grades = gradesResponse.data;
 
     let totalCredits = 0;
     let totalGradePoints = 0;
@@ -268,8 +249,7 @@ exports.simulateCourseRetake = async (req, res) => {
       grade_points: newGradePoints
     });
   } catch (err) {
-    console.error('Error in simulateCourseRetake:', err);
-    res.status(500).json({ error: err.message });
+    handleApiError(err, res);
   }
 };
 
@@ -277,27 +257,17 @@ exports.getStudentProgramCourses = async (req, res) => {
   const { student_id } = req.params;
 
   try {
-    // Fetch student
-    const student = await Student.findByPk(student_id);
-    if (!student) {
-      return res.status(404).json({ error: 'Student not found' });
-    }
+    // Fetch student from Python API
+    const studentResponse = await axios.get(`${endpoints.students}/${student_id}`);
+    const student = studentResponse.data;
 
-    // Fetch program plan courses with course details
-    const programPlanCourses = await ProgramPlan.findAll({
-      where: { program_id: student.program_id },
-      include: [{
-        model: Course,
-        as: 'Course',
-        required: true
-      }]
-    });
+    // Fetch program plan courses with course details from Python API
+    const programPlansResponse = await axios.get(endpoints.programPlan(student.program_id));
+    const programPlanCourses = programPlansResponse.data;
 
-    // Fetch student's existing grades
-    const grades = await Grade.findAll({
-      where: { student_id },
-      include: [{ model: Course, as: 'course' }]
-    });
+    // Fetch student's existing grades from Python API
+    const gradesResponse = await axios.get(endpoints.studentGrades(student_id));
+    const grades = gradesResponse.data;
 
     // Map program plan courses with grade information if available
     const courses = programPlanCourses.map(planCourse => {
@@ -318,8 +288,7 @@ exports.getStudentProgramCourses = async (req, res) => {
       courses
     });
   } catch (err) {
-    console.error('Error in getStudentProgramCourses:', err);
-    res.status(500).json({ error: err.message });
+    handleApiError(err, res);
   }
 };
 

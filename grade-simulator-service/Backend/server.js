@@ -16,15 +16,23 @@ const semesterRoutes = require('./routes/semesterRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const gpaRuleRoutes = require('./routes/gpaRuleRoutes');
 const courseRoutes = require('./routes/courseRoutes');
-const gradeRoutes = require('./routes/gradeRoutes');
 const programPlanRoutes = require('./routes/programPlanRoutes');
 const graduationRequirementRoutes = require('./routes/graduationRequirementRoutes');
 const gpaCalculatorRoutes = require('./routes/gpaCalculatorRoutes');
 const graduationRoutes = require('./routes/graduationRoutes');
 
 const app = express();
+
 app.use(express.json());
-app.use(cors());
+// ... existing code ...
+
+app.use(express.json());
+app.use(cors({
+  origin: 'http://localhost:5173', // Your frontend URLq
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+})); 
 
 // ======================
 // Model Associations
@@ -109,7 +117,6 @@ sequelize.sync({
 // ======================
 app.use('/simulator/', studentRoutes);
 app.use('/simulator/', courseRoutes);
-app.use('/simulator/', gradeRoutes);
 app.use('/simulator/', semesterRoutes);
 app.use('/simulator/', gpaRuleRoutes);
 app.use('/simulator/', programPlanRoutes);

@@ -1,7 +1,27 @@
-const Grade = require('../models/Grade');
-const GraduationRequirement = require('../models/GraduationRequirement');
-const Student = require('../models/Student');
-const Course = require('../models/Course');
+const axios = require('axios');
+const { endpoints } = require('../config/pythonApi');
+
+// Helper function to handle API errors
+const handleApiError = (err, res) => {
+  console.error('API Error:', err);
+  if (err.response) {
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    return res.status(err.response.status).json(err.response.data);
+  } else if (err.request) {
+    // The request was made but no response was received
+    return res.status(503).json({ 
+      error: 'Python API service unavailable',
+      details: err.message
+    });
+  } else {
+    // Something happened in setting up the request that triggered an Error
+    return res.status(500).json({ 
+      error: 'Internal Server Error',
+      details: err.message
+    });
+  }
+};
 
 exports.checkGraduationRequirements = async (req, res) => {
   const { student_id } = req.params;
@@ -9,17 +29,22 @@ exports.checkGraduationRequirements = async (req, res) => {
 
   try {
     console.log('Fetching student with ID:', student_id);
-    const student = await Student.findByPk(student_id);
-    if (!student) return res.status(404).json({ error: 'Student not found' });
+    const studentResponse = await axios.get(`${endpoints.students}/${student_id}`);
+    const student = studentResponse.data;
 
-    const graduationRequirement = await GraduationRequirement.findByPk(student.program_id);
-    if (!graduationRequirement) return res.status(404).json({ error: 'Graduation requirements not found for this program' });
+    // Get graduation requirements directly by program ID
+    console.log('Fetching graduation requirements for program ID:', student.program_id);
+    const graduationRequirementResponse = await axios.get(endpoints.graduationRequirement(student.program_id));
+    const graduationRequirement = graduationRequirementResponse.data;
 
-    const grades = await Grade.findAll({
-      where: { student_id },
-      include: [{ model: Course, as: 'course', required: false }], // Updated alias to 'course'
-    });
-    console.log('Grades fetched:', grades.map(grade => grade.toJSON()));
+    if (!graduationRequirement) {
+      return res.status(404).json({ error: 'Graduation requirements not found for this program' });
+    }
+
+    const gradesResponse = await axios.get(endpoints.studentGrades(student_id));
+    const grades = gradesResponse.data;
+    
+    console.log('Grades fetched:', grades);
 
     let totalCreditsEarned = 0;
     let totalGradePoints = 0;
@@ -57,7 +82,6 @@ exports.checkGraduationRequirements = async (req, res) => {
       can_graduate: meetsGPA && meetsCredits,
     });
   } catch (err) {
-    console.error('Error in checkGraduationRequirements:', err);
-    res.status(500).json({ error: err.message });
+    handleApiError(err, res);
   }
 };
