@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dummy-data-service
+  labels:
+    app: dummy-data-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dummy-data-service
+  template:
+    metadata:
+      labels:
+        app: dummy-data-service
+    spec:
+      containers:
+      - name: dummy-data-service
+        image: ali142/dummy-data-service:latest
+        ports:
+        - containerPort: 5002
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "256Mi"
+          requests:
+            cpu: "0.1"
+            memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dummy-data-service
+spec:
+  selector:
+    app: dummy-data-service
+  ports:
+  - port: 5002
+    targetPort: 5002
+  type: ClusterIP 

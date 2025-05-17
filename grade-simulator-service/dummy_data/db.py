@@ -20,9 +20,6 @@ DATABASE_URL = f"sqlite:///{DB_PATH}"
 engine = create_engine(
     DATABASE_URL,
     echo=True,
-    # Configure connection pool
-    pool_size=20,           # Default is 5, increase pool size
-    max_overflow=20,        # Default is 10, increase to handle more connections 
     pool_recycle=1800,      # Recycle connections after 30 minutes
     pool_pre_ping=True,     # Verify connections before using them
     connect_args={"check_same_thread": False}  # Needed for SQLite

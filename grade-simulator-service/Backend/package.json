@@ -15,7 +15,9 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "mysql2": "^3.13.0",
-    "sequelize": "^6.37.6"
+    "sequelize": "^6.37.6",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

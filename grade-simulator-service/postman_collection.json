@@ -1,0 +1,770 @@
+{
+  "info": {
+    "name": "Grade Simulator API",
+    "description": "API documentation for the Grade Simulator Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Check API Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Simple health check to verify the API is running"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/health",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["health"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"healthy\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Student Endpoints",
+      "item": [
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": ["{{baseUrl}}"],
+              "path": ["students"]
+            },
+            "description": "Retrieve all students in the system"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/students",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["students"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Student Name\",\n    \"email\": \"student@example.com\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Student by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/students/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Student ID"
+                }
+              ]
+            },
+            "description": "Retrieve details for a specific student"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/students/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["students", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Student Name\",\n  \"email\": \"student@example.com\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Student Program Courses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/students/:id/program-courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", ":id", "program-courses"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Student ID"
+                }
+              ]
+            },
+            "description": "Retrieve courses in the student's program"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/students/:id/program-courses",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["students", ":id", "program-courses"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"code\": \"CSE101\",\n    \"name\": \"Introduction to Programming\"\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Course Endpoints",
+      "item": [
+        {
+          "name": "Get All Courses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses"]
+            },
+            "description": "Retrieve all courses"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/courses",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["courses"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"code\": \"CSE101\",\n    \"name\": \"Introduction to Programming\",\n    \"credits\": 3\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Course by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/courses/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Course ID"
+                }
+              ]
+            },
+            "description": "Retrieve details for a specific course"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/courses/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["courses", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"code\": \"CSE101\",\n  \"name\": \"Introduction to Programming\",\n  \"credits\": 3\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Semester Endpoints",
+      "item": [
+        {
+          "name": "Get All Semesters",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/semesters",
+              "host": ["{{baseUrl}}"],
+              "path": ["semesters"]
+            },
+            "description": "Retrieve all academic semesters"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/semesters",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["semesters"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Fall 2023\",\n    \"start_date\": \"2023-08-28\",\n    \"end_date\": \"2023-12-15\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Semester by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/semesters/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["semesters", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Semester ID"
+                }
+              ]
+            },
+            "description": "Retrieve details for a specific semester"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/semesters/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["semesters", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Fall 2023\",\n  \"start_date\": \"2023-08-28\",\n  \"end_date\": \"2023-12-15\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GPA Rules Endpoints",
+      "item": [
+        {
+          "name": "Get All GPA Rules",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/gpa-rules",
+              "host": ["{{baseUrl}}"],
+              "path": ["gpa-rules"]
+            },
+            "description": "Retrieve all GPA conversion rules"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/gpa-rules",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["gpa-rules"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"grade\": \"A\",\n    \"points\": 4.0\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get GPA Rule by Grade",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/gpa-rules/:grade",
+              "host": ["{{baseUrl}}"],
+              "path": ["gpa-rules", ":grade"],
+              "variable": [
+                {
+                  "key": "grade",
+                  "value": "A",
+                  "description": "Letter grade (e.g., \"A\", \"B+\")"
+                }
+              ]
+            },
+            "description": "Retrieve GPA rule for a specific grade"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/gpa-rules/:grade",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["gpa-rules", ":grade"],
+                  "variable": [
+                    {
+                      "key": "grade",
+                      "value": "A"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"grade\": \"A\",\n  \"points\": 4.0\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Program Plan Endpoints",
+      "item": [
+        {
+          "name": "Get All Program Plans",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/programplans",
+              "host": ["{{baseUrl}}"],
+              "path": ["programplans"]
+            },
+            "description": "Retrieve all program plans"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/programplans",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["programplans"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"semester_number\": 1,\n    \"course_id\": 101,\n    \"course\": {\n      \"id\": 101,\n      \"code\": \"CSE101\",\n      \"name\": \"Introduction to Programming\"\n    }\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Program Plan by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/programplans/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["programplans", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Program Plan ID"
+                }
+              ]
+            },
+            "description": "Retrieve details for a specific program plan"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/programplans/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["programplans", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"semester_number\": 1,\n  \"course_id\": 101,\n  \"course\": {\n    \"id\": 101,\n    \"code\": \"CSE101\",\n    \"name\": \"Introduction to Programming\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Track Student Program Plan",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/students/:student_id/programplan",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", ":student_id", "programplan"],
+              "variable": [
+                {
+                  "key": "student_id",
+                  "value": "1",
+                  "description": "Student ID"
+                }
+              ]
+            },
+            "description": "Track a student's progress through their program plan"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/students/:student_id/programplan",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["students", ":student_id", "programplan"],
+                  "variable": [
+                    {
+                      "key": "student_id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"completed\": [\n    {\n      \"id\": 1,\n      \"code\": \"CSE101\",\n      \"name\": \"Introduction to Programming\",\n      \"grade\": \"A\"\n    }\n  ],\n  \"inProgress\": [],\n  \"remaining\": []\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Graduation Requirement Endpoints",
+      "item": [
+        {
+          "name": "Get All Graduation Requirements",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/graduation-requirements",
+              "host": ["{{baseUrl}}"],
+              "path": ["graduation-requirements"]
+            },
+            "description": "Retrieve all graduation requirements"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/graduation-requirements",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graduation-requirements"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"requirement_type\": \"Core\",\n    \"minimum_grade\": \"C\",\n    \"course_id\": 101,\n    \"course\": {\n      \"id\": 101,\n      \"code\": \"CSE101\",\n      \"name\": \"Introduction to Programming\"\n    }\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Graduation Requirement by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/graduation-requirements/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["graduation-requirements", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Graduation Requirement ID"
+                }
+              ]
+            },
+            "description": "Retrieve details for a specific graduation requirement"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/graduation-requirements/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graduation-requirements", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"requirement_type\": \"Core\",\n  \"minimum_grade\": \"C\",\n  \"course_id\": 101,\n  \"course\": {\n    \"id\": 101,\n    \"code\": \"CSE101\",\n    \"name\": \"Introduction to Programming\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GPA Calculator Endpoints",
+      "item": [
+        {
+          "name": "Calculate CGPA",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/students/:student_id/cgpa",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", ":student_id", "cgpa"],
+              "variable": [
+                {
+                  "key": "student_id",
+                  "value": "1",
+                  "description": "Student ID"
+                }
+              ]
+            },
+            "description": "Calculate a student's cumulative GPA"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/students/:student_id/cgpa",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["students", ":student_id", "cgpa"],
+                  "variable": [
+                    {
+                      "key": "student_id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"cgpa\": 3.5,\n  \"totalCredits\": 60,\n  \"totalPoints\": 210\n}"
+            }
+          ]
+        },
+        {
+          "name": "Simulate Course Retake",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/students/:student_id/simulate-retake",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", ":student_id", "simulate-retake"],
+              "variable": [
+                {
+                  "key": "student_id",
+                  "value": "1",
+                  "description": "Student ID"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": 101,\n  \"newGrade\": \"A\"\n}"
+            },
+            "description": "Simulate how a course retake would affect a student's GPA"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/students/:student_id/simulate-retake",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["students", ":student_id", "simulate-retake"],
+                  "variable": [
+                    {
+                      "key": "student_id",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"courseId\": 101,\n  \"newGrade\": \"A\"\n}"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"currentCGPA\": 3.2,\n  \"simulatedCGPA\": 3.4,\n  \"difference\": 0.2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Student Program Courses (Alt)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/students/:student_id/program-courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", ":student_id", "program-courses"],
+              "variable": [
+                {
+                  "key": "student_id",
+                  "value": "1",
+                  "description": "Student ID"
+                }
+              ]
+            },
+            "description": "Retrieve courses in the student's program with grades"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/students/:student_id/program-courses",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["students", ":student_id", "program-courses"],
+                  "variable": [
+                    {
+                      "key": "student_id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"code\": \"CSE101\",\n    \"name\": \"Introduction to Programming\",\n    \"grade\": \"A\",\n    \"semester\": \"Fall 2023\"\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Graduation Check Endpoints",
+      "item": [
+        {
+          "name": "Check Graduation Requirements",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/students/:student_id/graduation",
+              "host": ["{{baseUrl}}"],
+              "path": ["students", ":student_id", "graduation"],
+              "variable": [
+                {
+                  "key": "student_id",
+                  "value": "1",
+                  "description": "Student ID"
+                }
+              ]
+            },
+            "description": "Check if a student meets all graduation requirements"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/students/:student_id/graduation",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["students", ":student_id", "graduation"],
+                  "variable": [
+                    {
+                      "key": "student_id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"eligible\": true,\n  \"requirements\": {\n    \"completed\": [\n      {\n        \"id\": 1,\n        \"requirement_type\": \"Core\",\n        \"course\": {\n          \"code\": \"CSE101\",\n          \"name\": \"Introduction to Programming\"\n        },\n        \"status\": \"met\",\n        \"grade\": \"A\"\n      }\n    ],\n    \"remaining\": []\n  },\n  \"cgpa\": 3.5,\n  \"minimumCGPARequired\": 2.0\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/simulator",
+      "type": "string",
+      "description": "API base URL for local development"
+    }
+  ]
+} 

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+data:
+  PYTHON_API_BASE_URL: "http://dummy-data-service:5002/api"
+  NODE_ENV: "production" 
