@@ -1,5 +1,6 @@
 const Group = require('../models/groupModel');
 const User = require('../models/userModel');
+const { getIO } = require('../socket/socketConfig');
 
 // Create a new group
 const createGroup = async (req, res) => {
@@ -18,6 +19,17 @@ const createGroup = async (req, res) => {
       createdBy: creatorId
     });
     await group.save();
+    
+    // Emit group creation event to all members
+    const io = getIO();
+    allMembers.forEach(memberId => {
+      io.emit('groupMetadataUpdate', {
+        groupId: group._id,
+        type: 'members',
+        data: { members: allMembers }
+      });
+    });
+    
     res.status(201).json(group);
   } catch (error) {
     res.status(500).json({ message: 'Error creating group', error: error.message });
@@ -58,6 +70,15 @@ const addMembers = async (req, res) => {
     if (!Array.isArray(members)) return res.status(400).json({ message: 'Members must be an array' });
     group.members = Array.from(new Set([...group.members.map(String), ...members.map(String)]));
     await group.save();
+    
+    // Emit members update event
+    const io = getIO();
+    io.to(group._id.toString()).emit('groupMetadataUpdate', {
+      groupId: group._id,
+      type: 'members',
+      data: { members: group.members }
+    });
+    
     res.json(group);
   } catch (error) {
     res.status(500).json({ message: 'Error adding members', error: error.message });
@@ -76,6 +97,15 @@ const removeMembers = async (req, res) => {
     if (!Array.isArray(members)) return res.status(400).json({ message: 'Members must be an array' });
     group.members = group.members.filter(m => !members.map(String).includes(String(m)));
     await group.save();
+    
+    // Emit members update event
+    const io = getIO();
+    io.to(group._id.toString()).emit('groupMetadataUpdate', {
+      groupId: group._id,
+      type: 'members',
+      data: { members: group.members }
+    });
+    
     res.json(group);
   } catch (error) {
     res.status(500).json({ message: 'Error removing members', error: error.message });
@@ -104,6 +134,15 @@ const updateAdmins = async (req, res) => {
       }
     }
     await group.save();
+    
+    // Emit admins update event
+    const io = getIO();
+    io.to(group._id.toString()).emit('groupMetadataUpdate', {
+      groupId: group._id,
+      type: 'admins',
+      data: { admins: group.admins }
+    });
+    
     res.json(group);
   } catch (error) {
     res.status(500).json({ message: 'Error updating admins', error: error.message });
@@ -121,8 +160,15 @@ const leaveGroup = async (req, res) => {
     // Remove from admins
     group.admins = group.admins.filter(a => String(a) !== String(userId));
     // If no members left, delete the group
+    const io = getIO();
     if (group.members.length === 0) {
       await group.deleteOne();
+      // Emit group deletion event
+      io.to(group._id.toString()).emit('groupMetadataUpdate', {
+        groupId: group._id,
+        type: 'deleted',
+        data: { deleted: true }
+      });
       return res.json({ message: 'Group deleted (no members left)' });
     }
     // Prevent leaving if last admin and members remain
@@ -131,6 +177,19 @@ const leaveGroup = async (req, res) => {
       group.admins = [group.members[0]];
     }
     await group.save();
+    
+    // Emit members and admins update events
+    io.to(group._id.toString()).emit('groupMetadataUpdate', {
+      groupId: group._id,
+      type: 'members',
+      data: { members: group.members }
+    });
+    io.to(group._id.toString()).emit('groupMetadataUpdate', {
+      groupId: group._id,
+      type: 'admins',
+      data: { admins: group.admins }
+    });
+    
     res.json({ message: 'Left group', group });
   } catch (error) {
     res.status(500).json({ message: 'Error leaving group', error: error.message });
@@ -147,6 +206,15 @@ const updateGroup = async (req, res) => {
     }
     if (req.body.name) group.name = req.body.name;
     await group.save();
+    
+    // Emit name update event
+    const io = getIO();
+    io.to(group._id.toString()).emit('groupMetadataUpdate', {
+      groupId: group._id,
+      type: 'name',
+      data: { name: group.name }
+    });
+    
     res.json(group);
   } catch (error) {
     res.status(500).json({ message: 'Error renaming group', error: error.message });

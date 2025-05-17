@@ -165,6 +165,12 @@ const handleGroupChat = (io, socket) => {
     socket.on('groupMessageDelete', ({ messageId, groupId }) => {
         io.to(groupId).emit('groupMessageDelete', { messageId, groupId });
     });
+
+    // Group metadata changes
+    socket.on('groupMetadataUpdate', ({ groupId, type, data }) => {
+        // type can be: 'members', 'admins', 'name', 'deleted'
+        io.to(groupId).emit('groupMetadataUpdate', { groupId, type, data });
+    });
 };
 
 const handleDisconnect = (socket, io) => {

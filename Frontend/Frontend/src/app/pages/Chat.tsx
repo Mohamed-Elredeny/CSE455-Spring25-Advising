@@ -504,16 +504,60 @@ const Chat: React.FC = () => {
         msg._id === data.messageId ? { ...msg, deleted: true } : msg
       ));
     };
+    const handleGroupMetadataUpdate = (data: { 
+      groupId: string; 
+      type: 'members' | 'admins' | 'name' | 'deleted'; 
+      data: {
+        members?: string[];
+        admins?: string[];
+        name?: string;
+        deleted?: boolean;
+      };
+    }) => {
+      if (data.groupId === selectedGroup._id) {
+        switch (data.type) {
+          case 'members':
+            // For group details, we need to fetch the updated group to get the full member objects
+            axios.get(`${import.meta.env.VITE_API_URL}/group/${data.groupId}`, {
+              headers: { Authorization: `Bearer ${auth?.token}` }
+            }).then(res => {
+              setGroupDetails(res.data);
+            }).catch(console.error);
+            
+            // For groups list, we can just update the member IDs
+            setGroups(prev => prev.map(g => g._id === data.groupId ? { ...g, members: data.data.members || [] } : g));
+            break;
+          case 'admins':
+            setGroupDetails(prev => prev ? { ...prev, admins: data.data.admins || [] } : null);
+            setGroups(prev => prev.map(g => g._id === data.groupId ? { ...g, admins: data.data.admins || [] } : g));
+            break;
+          case 'name':
+            setGroupDetails(prev => prev ? { ...prev, name: data.data.name || '' } : null);
+            setGroups(prev => prev.map(g => g._id === data.groupId ? { ...g, name: data.data.name || '' } : g));
+            break;
+          case 'deleted':
+            if (data.data.deleted) {
+              setGroups(prev => prev.filter(g => g._id !== data.groupId));
+              setSelectedGroup(null);
+              setGroupDetails(null);
+              setGroupMessages([]);
+            }
+            break;
+        }
+      }
+    };
     socket.on('groupMessage', handleGroupMessage);
     socket.on('groupMessageUpdate', handleGroupMessageUpdate);
     socket.on('groupMessageDelete', handleGroupMessageDelete);
+    socket.on('groupMetadataUpdate', handleGroupMetadataUpdate);
     return () => {
       socket.emit('leaveGroup', selectedGroup._id);
       socket.off('groupMessage', handleGroupMessage);
       socket.off('groupMessageUpdate', handleGroupMessageUpdate);
       socket.off('groupMessageDelete', handleGroupMessageDelete);
+      socket.off('groupMetadataUpdate', handleGroupMetadataUpdate);
     };
-  }, [socket, selectedGroup]);
+  }, [socket, selectedGroup, auth?.user?._id]);
 
   // Send group message
   const sendGroupMessage = async (e: React.FormEvent) => {
