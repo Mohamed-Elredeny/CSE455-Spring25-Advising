@@ -11,6 +11,8 @@ interface Message {
   fileUrl?: string;
   fileName?: string;
   deleted?: boolean;
+  edited?: boolean;
+  senderName?: string; // for group chat
 }
 
 interface MessageListProps {
@@ -24,10 +26,12 @@ interface MessageListProps {
   onEditContentChange: (content: string) => void;
   onEditSubmit: () => void;
   onEditCancel: () => void;
+  isGroupChat?: boolean;
 }
 
 const MessageList: React.FC<MessageListProps> = ({
   messages,
+  currentUserId,
   userName,
   onEdit,
   onDelete,
@@ -35,7 +39,8 @@ const MessageList: React.FC<MessageListProps> = ({
   editContent,
   onEditContentChange,
   onEditSubmit,
-  onEditCancel
+  onEditCancel,
+  isGroupChat = false
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -47,13 +52,20 @@ const MessageList: React.FC<MessageListProps> = ({
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  // For group chat, display 'me' for current user, otherwise senderName or userName
+  const getDisplayName = (message: Message) => {
+    if (isGroupChat && message.senderId === currentUserId) return 'me';
+    if (isGroupChat && message.senderName) return message.senderName;
+    return userName;
+  };
+
   return (
     <div className="messages">
       {messages.map((message) => (
         <MessageComponent
           key={message._id}
           message={message}
-          userName={userName}
+          userName={getDisplayName(message)}
           onEdit={onEdit}
           onDelete={onDelete}
           isEditing={editingMessageId === message._id}
@@ -61,6 +73,7 @@ const MessageList: React.FC<MessageListProps> = ({
           onEditContentChange={onEditContentChange}
           onEditSubmit={onEditSubmit}
           onEditCancel={onEditCancel}
+          isGroupChat={isGroupChat}
         />
       ))}
       <div ref={messagesEndRef} />

@@ -87,38 +87,38 @@ const Chat: React.FC = () => {
   // Fetch chat user and messages only if not in /chat/private (legacy route)
   useEffect(() => {
     if (!isPrivateChatList && userId && auth?.token) {
-      const fetchChatUser = async () => {
-        try {
-          const response = await axios.get(`${import.meta.env.VITE_API_URL}/user/${userId}`, {
-            headers: {
-              Authorization: `Bearer ${auth?.token}`,
-            },
-          });
-          if (response.data && response.data._id) {
-            setChatUser(response.data);
-          } else {
+    const fetchChatUser = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/user/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${auth?.token}`,
+          },
+        });
+        if (response.data && response.data._id) {
+          setChatUser(response.data);
+        } else {
             setChatUser(null);
-          }
-        } catch (error) {
-          setChatUser(null);
         }
-      };
+      } catch (error) {
+          setChatUser(null);
+      }
+    };
       fetchChatUser();
     }
   }, [userId, auth?.token, isPrivateChatList]);
 
   useEffect(() => {
     if (!isPrivateChatList && userId && auth?.token && auth?.user?._id) {
-      const fetchMessages = async () => {
-        try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/messages?userId=${userId}&currentUserId=${auth.user._id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${auth.token}`,
-              },
-            }
-          );
+    const fetchMessages = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/messages?userId=${userId}&currentUserId=${auth.user._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${auth.token}`,
+            },
+          }
+        );
           if (Array.isArray(response.data)) {
             setMessages(response.data);
           }
@@ -143,14 +143,14 @@ const Chat: React.FC = () => {
               },
             }
           );
-          if (Array.isArray(response.data)) {
-            setMessages(response.data);
-          }
-        } catch (error) {
-          setMessages([]);
+        if (Array.isArray(response.data)) {
+          setMessages(response.data);
         }
-      };
-      fetchMessages();
+      } catch (error) {
+          setMessages([]);
+      }
+    };
+    fetchMessages();
       setChatUser(selectedUser);
     }
   }, [isPrivateChatList, selectedUser, auth?.token, auth?.user?._id]);
@@ -162,7 +162,7 @@ const Chat: React.FC = () => {
       transports: ['websocket'],
       auth: { token: auth?.token }
     });
-
+    
     socketInstance.on('connect', () => {
       socketInstance.emit('getOnlineUsers');
     });
@@ -214,20 +214,20 @@ const Chat: React.FC = () => {
     socketInstance.on('messageUpdate', ({ messageId, content, edited, receiverId }) => {
       const targetUserId = isPrivateChatList ? selectedUser?._id : userId;
       if (receiverId === auth?.user?._id || receiverId === targetUserId) {
-        setMessages(prev =>
-          prev.map(msg =>
+      setMessages(prev =>
+        prev.map(msg =>
             msg._id === messageId ? { ...msg, content, edited: !!edited } : msg
-          )
-        );
+        )
+      );
       }
     });
 
     socketInstance.on('messageDelete', ({ messageId, receiverId }) => {
       const targetUserId = isPrivateChatList ? selectedUser?._id : userId;
       if (receiverId === auth?.user?._id || receiverId === targetUserId) {
-        setMessages(prev => prev.map(msg =>
-          msg._id === messageId ? { ...msg, deleted: true } : msg
-        ));
+      setMessages(prev => prev.map(msg =>
+        msg._id === messageId ? { ...msg, deleted: true } : msg
+      ));
       }
     });
 
@@ -853,7 +853,7 @@ const Chat: React.FC = () => {
                 </div>
               </div>
             ) : selectedGroup ? (
-              <div className="card mx-auto my-8 w-100 mw-1000px shadow" id="kt_chat_messenger">
+    <div className="card mx-auto my-8 w-100 mw-1000px shadow" id="kt_chat_messenger">
                 <div className="chat-header">
                   <div className="d-flex justify-content-between align-items-center h-100">
                     <div className="d-flex align-items-center">
@@ -937,7 +937,13 @@ const Chat: React.FC = () => {
                     style={{ height: 'calc(100vh - 400px)' }}
                   >
                     <MessageList
-                      messages={groupMessages}
+                      messages={groupMessages.map(msg => ({
+                        ...msg,
+                        senderName:
+                          groupDetails && typeof msg.senderId === 'string'
+                            ? ((groupDetails.members.find((m: GroupMember | string) => typeof m === 'object' && m._id === msg.senderId) as GroupMember | undefined)?.name || selectedGroup.name)
+                            : selectedGroup.name
+                      }))}
                       currentUserId={auth.user._id}
                       userName={selectedGroup.name}
                       onEdit={(messageId, content) => {
@@ -953,6 +959,7 @@ const Chat: React.FC = () => {
                         setEditingMessageId(null);
                         setEditMessageContent('');
                       }}
+                      isGroupChat={true}
                     />
                   </div>
                 </div>
@@ -1015,24 +1022,24 @@ const Chat: React.FC = () => {
               data-kt-scroll-offset="5px"
               style={{ height: 'calc(100vh - 400px)' }}
             >
-              <MessageList
-                messages={messages}
-                currentUserId={auth.user._id}
-                userName={chatUser.name}
-                onEdit={(messageId, content) => {
-                  setEditingMessageId(messageId);
-                  setEditMessageContent(content);
-                }}
-                onDelete={handleDeleteMessage}
-                editingMessageId={editingMessageId}
-                editContent={editMessageContent}
-                onEditContentChange={setEditMessageContent}
-                onEditSubmit={() => handleEditMessage(editingMessageId!, editMessageContent)}
-                onEditCancel={() => {
-                  setEditingMessageId(null);
-                  setEditMessageContent('');
-                }}
-              />
+                <MessageList
+                  messages={messages}
+                  currentUserId={auth.user._id}
+                  userName={chatUser.name}
+                  onEdit={(messageId, content) => {
+                    setEditingMessageId(messageId);
+                    setEditMessageContent(content);
+                  }}
+                  onDelete={handleDeleteMessage}
+                  editingMessageId={editingMessageId}
+                  editContent={editMessageContent}
+                  onEditContentChange={setEditMessageContent}
+                  onEditSubmit={() => handleEditMessage(editingMessageId!, editMessageContent)}
+                  onEditCancel={() => {
+                    setEditingMessageId(null);
+                    setEditMessageContent('');
+                  }}
+                />
             </div>
 
             <div 

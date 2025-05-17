@@ -23,6 +23,7 @@ interface MessageProps {
   onEditContentChange: (content: string) => void;
   onEditSubmit: () => void;
   onEditCancel: () => void;
+  isGroupChat?: boolean;
 }
 
 const Message: React.FC<MessageProps> = ({
@@ -34,7 +35,8 @@ const Message: React.FC<MessageProps> = ({
   editContent,
   onEditContentChange,
   onEditSubmit,
-  onEditCancel
+  onEditCancel,
+  isGroupChat = false
 }) => {
   const formatDate = useMemo(() => (dateString: string) => {
     const date = new Date(dateString);
@@ -103,7 +105,7 @@ const Message: React.FC<MessageProps> = ({
             <div className="d-flex flex-column gap-2">
               <div className="d-flex align-items-center">
                 <div className={`d-flex flex-column ${message.type === 'out' ? 'align-items-end' : ''}`}>
-                  {message.type === 'in' && (
+                  {isGroupChat && (
                     <div className="text-muted fs-8 mb-1">{userName}</div>
                   )}
                   <div className="position-relative message-container">
