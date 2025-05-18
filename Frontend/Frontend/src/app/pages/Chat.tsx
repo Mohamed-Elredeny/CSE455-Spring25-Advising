@@ -331,10 +331,12 @@ const Chat: React.FC = () => {
                       }}
                       selectedRemoveMembers={selectedRemoveMembers}
                       setSelectedRemoveMembers={setSelectedRemoveMembers}
-                      handleRemoveMembers={(e: React.FormEvent) => {
+                      handleRemoveMembers={async (e: React.FormEvent) => {
                         e.preventDefault();
                         if (groupDetails && selectedRemoveMembers.length > 0) {
-                          handleRemoveMembers(groupDetails._id, selectedRemoveMembers);
+                          await handleRemoveMembers(groupDetails._id, selectedRemoveMembers);
+                          setShowRemoveMemberModal(false);
+                          setSelectedRemoveMembers([]);
                         }
                       }}
                       renameGroupName={renameGroupName}
@@ -354,7 +356,7 @@ const Chat: React.FC = () => {
                   </>
                 )}
                 {!selectedUser && !selectedGroup && (
-                  <div className="text-center w-100">
+                  <div className="d-flex flex-column align-items-center justify-content-center h-100 w-100" style={{ minHeight: '400px' }}>
                     <i className="ki-duotone ki-message-text-2 fs-5tx text-primary mb-5">
                       <span className="path1"></span>
                       <span className="path2"></span>
