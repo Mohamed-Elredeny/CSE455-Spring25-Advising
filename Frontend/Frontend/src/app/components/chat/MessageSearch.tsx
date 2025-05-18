@@ -34,7 +34,7 @@ const MessageSearch: React.FC<MessageSearchProps> = ({
   };
 
   return (
-    <div className="card-header">
+    <div className="card-header" style={{ position: 'relative' }}>
       <div className="card-title">
         <div className="d-flex align-items-center position-relative">
           <i className="ki-duotone ki-magnifier fs-3 position-absolute ms-4">
@@ -60,12 +60,27 @@ const MessageSearch: React.FC<MessageSearchProps> = ({
         </div>
       </div>
       {searchResults.length > 0 && (
-        <div className="card-body">
-          <div className="separator separator-dashed my-5"></div>
+        <div
+          style={{
+            position: 'absolute',
+            top: '48px', // just below the search bar
+            left: 0,
+            right: 0,
+            zIndex: 10,
+            maxHeight: '200px',
+            overflowY: 'auto',
+            borderRadius: '8px',
+            background: '#fff',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+            margin: '0 8px',
+            padding: '8px 0',
+            border: '1px solid #eee'
+          }}
+        >
           {searchResults.map((result) => (
             <div
               key={result._id}
-              className="d-flex flex-column mb-5 cursor-pointer hover-elevate-up"
+              className="d-flex flex-column mb-5 cursor-pointer hover-elevate-up px-6"
               onClick={() => {
                 onResultClick(result._id);
                 onClose();
