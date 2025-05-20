@@ -1,0 +1,70 @@
+name: Team 3 Branch CI/CD
+
+on:
+  push:
+    branches: 
+      - 'team3'    # Runs on team3 branch
+  pull_request:
+    branches: 
+      - 'team3'    # Runs on PRs targeting team3 branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ['grade-simulator', 'chat', 'notification']
+        include:
+          - service: 'grade-simulator'
+            working-directory: 'grade-simulator-service/Backend'
+          - service: 'chat'
+            working-directory: 'chat-service'
+          - service: 'notification'
+            working-directory: 'notification-service'
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: '${{ matrix.working-directory }}/package-lock.json'
+        
+    - name: Check if service directory exists
+      id: check_dir
+      run: |
+        if [ -d "${{ matrix.working-directory }}" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Install dependencies
+      if: steps.check_dir.outputs.exists == 'true'
+      working-directory: ${{ matrix.working-directory }}
+      run: npm ci
+      
+    - name: Run linting
+      if: steps.check_dir.outputs.exists == 'true'
+      working-directory: ${{ matrix.working-directory }}
+      run: |
+        # Add linting when you have it configured
+        echo "Linting step - add your linting commands here"
+        
+    - name: Build application
+      if: steps.check_dir.outputs.exists == 'true'
+      working-directory: ${{ matrix.working-directory }}
+      run: |
+        # Build step if needed
+        echo "Building application - ${{ matrix.service }}"
+        
+    - name: Run tests
+      if: steps.check_dir.outputs.exists == 'true'
+      working-directory: ${{ matrix.working-directory }}
+      run: |
+        # Replace with actual test command when tests are implemented
+        echo "Running tests for ${{ matrix.service }}"
+        # npm test 
