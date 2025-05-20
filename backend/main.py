@@ -1,36 +1,64 @@
-# main.py
-from fastapi import FastAPI, HTTPException, Body
-from fastapi.middleware.cors import CORSMiddleware  # Import CORS middleware
-from models.notification import Notification, NotificationCreate, NotificationGroup, NotificationType, NotificationPreference
+from fastapi import FastAPI, HTTPException, Body, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from models.notification import Notification, NotificationCreate, NotificationGroup, NotificationPreference
 from database import notification_collection, check_connection, notification_groups_collection, notification_preferences_collection
 from datetime import datetime
 import uuid
 from pydantic import BaseModel
-from fastapi import BackgroundTasks  # Import BackgroundTasks for async email sending
+from fastapi import BackgroundTasks
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
+import json
+
 load_dotenv()
 
-# Helper function to send email
+frontend_url = os.getenv("FRONTEND_URL")
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: dict[str, list[WebSocket]] = {}
+
+    async def connect(self, websocket: WebSocket, user_id: str):
+        await websocket.accept()
+        if user_id not in self.active_connections:
+            self.active_connections[user_id] = []
+        self.active_connections[user_id].append(websocket)
+
+    def disconnect(self, websocket: WebSocket, user_id: str):
+        if user_id in self.active_connections:
+            self.active_connections[user_id].remove(websocket)
+            if not self.active_connections[user_id]:
+                del self.active_connections[user_id]
+
+    async def broadcast_to_user(self, user_id: str, message: dict):
+        if user_id in self.active_connections:
+            for connection in self.active_connections[user_id]:
+                await connection.send_json(message)
+
+    async def broadcast_to_group(self, group_id: str, message: dict):
+        group = notification_groups_collection.find_one({"id": group_id})
+        if group and "members" in group:
+            for user_id in group["members"]:
+                await self.broadcast_to_user(user_id, message)
+
+manager = ConnectionManager()
+
 def send_email(to_email: str, subject: str, body: str):
     sender_email = os.getenv("EMAIL_ADDRESS")
     sender_password = os.getenv("EMAIL_PASSWORD")
 
-    # Check if email credentials are loaded
     if not sender_email or not sender_password:
         raise ValueError("Email credentials are not set in environment variables.")
 
-    # Create the email
     msg = MIMEMultipart()
     msg["From"] = sender_email
     msg["To"] = to_email
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "plain"))
 
-    # Send the email
     try:
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
@@ -39,43 +67,71 @@ def send_email(to_email: str, subject: str, body: str):
     except Exception as e:
         print(f"Failed to send email: {e}")
         raise
-# Pydantic model for PATCH request
+
 class UpdateNotification(BaseModel):
     status: str
 
-# Lifespan event handler
-async def lifespan(app: FastAPI):
-    await check_connection()
+class GroupMembership(BaseModel):
+    college_id: str
+    group_id: str
+
+def lifespan(app: FastAPI):
+    check_connection()
     yield
 
-# Create the FastAPI app once with the lifespan
 app = FastAPI(title="Notification Manager API", lifespan=lifespan)
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Specify the frontend origin
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods (GET, POST, PATCH, DELETE, etc.)
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Update the create_notification endpoint to use groups and preferences
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+@app.websocket("/ws/notifications/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    await manager.connect(websocket, user_id)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, user_id)
+
 @app.post("/notifications/", response_model=Notification)
 async def create_notification(notification: NotificationCreate, background_tasks: BackgroundTasks):
     notification_dict = notification.dict()
     notification_dict["id"] = str(uuid.uuid4())
     notification_dict["created_at"] = datetime.utcnow()
     
-    # Get user preferences
-    preferences = await notification_preferences_collection.find_one({
+    notification_collection.insert_one(notification_dict)
+    
+    ws_message = {
+        "id": notification_dict["id"],
+        "user_id": notification_dict["user_id"],
+        "type": notification_dict["type"],
+        "title": notification_dict["title"],
+        "message": notification_dict["message"],
+        "status": notification_dict["status"],
+        "created_at": notification_dict["created_at"].isoformat(),
+        "metadata": notification_dict["metadata"]
+    }
+    
+    if notification_dict.get("group_id"):
+        await manager.broadcast_to_group(notification_dict["group_id"], ws_message)
+    elif notification_dict["user_id"]:
+        await manager.broadcast_to_user(notification_dict["user_id"], ws_message)
+    
+    preferences = notification_preferences_collection.find_one({
         "user_id": notification_dict["user_id"],
         "group_id": notification_dict.get("group_id")
     })
     
-    # Check if should send email based on preferences
     if preferences and preferences.get("email_enabled"):
-        # Check quiet hours
         current_time = datetime.now().strftime("%H:%M")
         quiet_start = preferences.get("quiet_hours_start")
         quiet_end = preferences.get("quiet_hours_end")
@@ -91,31 +147,23 @@ async def create_notification(notification: NotificationCreate, background_tasks
             body = f"Title: {notification.title}\nMessage: {notification.message}"
             background_tasks.add_task(send_email, to_email, subject, body)
     
-    await notification_collection.insert_one(notification_dict)
     return notification_dict
-
 
 @app.get("/notifications/{user_id}", response_model=list[Notification])
 async def get_notifications(user_id: str):
-    notifications = []
-    async for notification in notification_collection.find({"user_id": user_id}):
-        notifications.append(Notification(**notification))
-    return notifications
+    return [Notification(**notification) for notification in notification_collection.find({"user_id": user_id})]
 
 @app.get("/notifications/{user_id}/type/{notification_type}", response_model=list[Notification])
-async def get_notifications_by_type(user_id: str, notification_type: NotificationType):
-    notifications = []
-    async for notification in notification_collection.find(
+async def get_notifications_by_type(user_id: str, notification_type: str):
+    return [Notification(**notification) for notification in notification_collection.find(
         {"user_id": user_id, "type": notification_type}
-    ):
-        notifications.append(Notification(**notification))
-    return notifications
+    )]
 
 @app.patch("/notifications/{notification_id}")
 async def update_notification(notification_id: str, update: UpdateNotification):
     if update.status not in ["unread", "read", "dismissed"]:
         raise HTTPException(status_code=400, detail="Invalid status")
-    result = await notification_collection.update_one(
+    result = notification_collection.update_one(
         {"id": notification_id},
         {"$set": {"status": update.status}}
     )
@@ -125,7 +173,7 @@ async def update_notification(notification_id: str, update: UpdateNotification):
 
 @app.delete("/notifications/{notification_id}")
 async def delete_notification(notification_id: str):
-    result = await notification_collection.delete_one({"id": notification_id})
+    result = notification_collection.delete_one({"id": notification_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Notification not found")
     return {"message": "Notification deleted"}
@@ -133,21 +181,32 @@ async def delete_notification(notification_id: str):
 @app.post("/notification-groups/", response_model=NotificationGroup)
 async def create_notification_group(group: NotificationGroup):
     group_dict = group.dict()
-    await notification_groups_collection.insert_one(group_dict)
+    notification_groups_collection.insert_one(group_dict)
     return group_dict
 
 @app.get("/notification-groups/", response_model=list[NotificationGroup])
 async def get_notification_groups():
-    groups = []
-    async for group in notification_groups_collection.find():
-        groups.append(NotificationGroup(**group))
-    return groups
+    return [NotificationGroup(**group) for group in notification_groups_collection.find()]
 
-# Notification Preferences endpoints
+@app.post("/notification-groups/members/")
+async def add_group_member(membership: GroupMembership):
+    user = notification_preferences_collection.find_one({"college_id": membership.college_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User with given college ID not found")
+    
+    result = notification_groups_collection.update_one(
+        {"id": membership.group_id},
+        {"$addToSet": {"members": user["user_id"]}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Group not found or user already in group")
+    
+    return {"message": "User added to group successfully"}
+
 @app.post("/notification-preferences/", response_model=NotificationPreference)
 async def create_notification_preference(preference: NotificationPreference):
-    # Check if preference already exists for this user and group
-    existing = await notification_preferences_collection.find_one({
+    existing = notification_preferences_collection.find_one({
         "user_id": preference.user_id,
         "group_id": preference.group_id
     })
@@ -155,15 +214,12 @@ async def create_notification_preference(preference: NotificationPreference):
         raise HTTPException(status_code=400, detail="Preference already exists")
     
     preference_dict = preference.dict()
-    await notification_preferences_collection.insert_one(preference_dict)
+    notification_preferences_collection.insert_one(preference_dict)
     return preference_dict
 
 @app.get("/notification-preferences/{user_id}", response_model=list[NotificationPreference])
 async def get_user_preferences(user_id: str):
-    preferences = []
-    async for pref in notification_preferences_collection.find({"user_id": user_id}):
-        preferences.append(NotificationPreference(**pref))
-    return preferences
+    return [NotificationPreference(**pref) for pref in notification_preferences_collection.find({"user_id": user_id})]
 
 if __name__ == "__main__":
     import uvicorn
