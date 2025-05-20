@@ -1,26 +1,25 @@
 #!/bin/bash
 
-# Number of requests to send
-REQUESTS=20
+echo "Testing Load Balancing for Advising Service"
+echo "=========================================="
 
-echo "Starting load balancing test..."
-echo "Sending $REQUESTS requests to student-service..."
+# Get the pod names
+echo "Current Pods:"
+kubectl get pods -l app=advising-service -o wide
 
-# Send requests and capture pod names
-for i in $(seq 1 $REQUESTS); do
+echo -e "\nMaking 10 requests to test load balancing..."
+echo "=========================================="
+
+for i in {1..10}
+do
     echo "Request $i:"
-    curl -s http://student-service/api/students | jq -r '.pod_name'
+    response=$(curl -s http://localhost:8000/health)
+    pod=$(kubectl get pods -l app=advising-service -o jsonpath="{.items[0].metadata.name}")
+    echo "Response: $response"
+    echo "Handled by pod: $pod"
+    echo "----------------------------------------"
     sleep 1
 done
 
-echo "Load balancing test complete!"
-echo "Checking pod logs..."
-
-# Get pod names
-PODS=$(kubectl get pods -l app=student-service -o jsonpath='{.items[*].metadata.name}')
-
-# Check logs for each pod
-for pod in $PODS; do
-    echo "Logs for pod $pod:"
-    kubectl logs $pod | grep "GET /api/students" | wc -l
-done 
+echo -e "\nFinal Pod Status:"
+kubectl get pods -l app=advising-service -o wide 
