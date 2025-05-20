@@ -1,0 +1,56 @@
+name: Deploy to Kubernetes
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Start minikube
+      uses: medyagh/setup-minikube@master
+
+    - name: Build Docker image
+      run: |
+        eval $(minikube docker-env)
+        docker build -t cse455-advising:prod .
+
+    - name: Deploy to minikube
+      run: |
+        # Install Ingress Controller
+        minikube addons enable ingress
+
+        # Apply Kubernetes manifests
+        kubectl apply -f k8s/frontend/deployment.yaml
+        kubectl apply -f k8s/frontend/service.yaml
+        kubectl apply -f k8s/ingress.yaml
+
+        # Wait for deployment
+        kubectl rollout status deployment/frontend
+
+    - name: Deploy using Helm
+      run: |
+        # Install Helm
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+        # Deploy frontend using Helm
+        helm upgrade --install frontend ./k8s/helm/frontend \
+          --values ./k8s/helm/frontend/values.yaml \
+          --wait
+
+    - name: Test the deployment
+      run: |
+        # Wait for ingress to be ready
+        kubectl wait --namespace ingress-nginx \
+          --for=condition=ready pod \
+          --selector=app.kubernetes.io/component=controller \
+          --timeout=90s
+
+        # Get URL and test
+        URL=$(minikube service frontend-service --url)
+        curl -s $URL | grep "CSE455 Advising"

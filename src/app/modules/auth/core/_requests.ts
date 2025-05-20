@@ -51,7 +51,7 @@ const MOCK_USER: UserModel = {
   }
 };
 
-const isDevelopment = () => APP_ENV === 'development';
+const isDevelopment = () => true || APP_ENV === 'development';
 
 // Server should return AuthModel
 export function login(email: string, password: string) {

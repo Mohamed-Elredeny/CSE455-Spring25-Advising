@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cse455-frontend
+description: A Helm chart for CSE455 Advising Frontend
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

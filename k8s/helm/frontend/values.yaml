@@ -1,0 +1,29 @@
+# Default values for cse455-frontend
+replicaCount: 2
+
+image:
+  repository: cse455-advising
+  tag: prod
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "256Mi"
+    cpu: "200m"
+
+env:
+  VITE_APP_API_URL: "http://backend-service/api/v1"
+  VITE_APP_AUTH_API_URL: "http://auth-service/api/v1/auth"

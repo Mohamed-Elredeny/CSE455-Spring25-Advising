@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: cse455-advising
+    tier: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cse455-advising
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: cse455-advising
+        tier: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: cse455-advising:dev
+        ports:
+        - containerPort: 5173
+        env:
+        - name: VITE_APP_API_URL
+          value: "http://backend-service/api/v1"
+        - name: VITE_APP_AUTH_API_URL
+          value: "http://auth-service/api/v1/auth"
+        - name: NODE_ENV
+          value: "development"
+        - name: APP_ENV
+          value: "development"
+
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"

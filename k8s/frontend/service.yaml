@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  labels:
+    app: cse455-advising
+    tier: frontend
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 5173
+    protocol: TCP
+    name: http
+  selector:
+    app: cse455-advising
+    tier: frontend

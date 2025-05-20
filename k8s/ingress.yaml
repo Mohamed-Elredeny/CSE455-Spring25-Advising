@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cse455-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+  - host: cse455.local
+    http:
+      paths:
+      - path: /(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
+      - path: /api/v1/auth/(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: auth-service
+            port:
+              number: 80
+      - path: /api/v1/students/(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: student-service
+            port:
+              number: 80
+      - path: /api/v1/advisors/(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: advisor-service
+            port:
+              number: 80

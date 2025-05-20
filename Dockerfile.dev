@@ -1,0 +1,22 @@
+# Development image for Kubernetes
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Expose the port Vite uses
+EXPOSE 5173
+
+# Set environment variables
+ENV NODE_ENV=development
+
+# Start the development server, making it accessible from outside the container
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
