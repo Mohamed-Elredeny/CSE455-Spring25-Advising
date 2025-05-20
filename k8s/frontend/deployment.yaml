@@ -16,21 +16,28 @@ spec:
       labels:
         app: cse455-advising
         tier: frontend
+      annotations:
+        app.kubernetes.io/connects-to: "grade-simulator-service,dummy-data-service"
     spec:
       containers:
       - name: frontend
-        image: cse455-advising:dev
+        image: aiu-advising-frontend-dev:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 5173
         env:
-        - name: VITE_APP_API_URL
-          value: "http://backend-service/api/v1"
-        - name: VITE_APP_AUTH_API_URL
-          value: "http://auth-service/api/v1/auth"
+        - name: GRADE_SERVICE_URL
+          value: "http://grade-simulator-service/simulator"
+        - name: DUMMY_DATA_SERVICE_URL
+          value: "http://dummy-data-service"
         - name: NODE_ENV
           value: "development"
-        - name: APP_ENV
+        - name: VITE_APP_ENV
           value: "development"
+        - name: REACT_APP_DEVELOPMENT_MODE
+          value: "true"
+        - name: VITE_DEVELOPMENT_MODE
+          value: "true"
 
         resources:
           requests:
