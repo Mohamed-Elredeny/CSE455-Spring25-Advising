@@ -31,20 +31,28 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'authentication',
-    'core',
+    'admin',
 
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+
 ]
 
+SITE_ID = 1  # Required for django.contrib.sites
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -109,6 +117,8 @@ MIDDLEWARE = [
 
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
+
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -186,7 +196,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # change default user model
-AUTH_USER_MODEL = 'core.User'
+AUTH_USER_MODEL = 'authentication.User'
 
 # Email config
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -199,6 +209,35 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 
 # # Frontend URL (adjust this to match your frontend)
-FRONTEND_URL = 'http://localhost:5173'  # Or your production frontend URL
+FRONTEND_URL = 'http://localhost:5173/metronic8/react/demo8'  # Or your production frontend URL
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+
+# GOOGLE Authentication
+
+SOCIAL_ACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email"
+        ],
+        "AUTH_PARAMS" : {"access_type": "online"}
+    }
+}
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+SOCIALACCOUNT_STORE_TOKENS = True
+
+LOGIN_REDIRCT_URL = FRONTEND_URL
+SOCIALACCOUNT_LOGIN_REDIRECT_URL = FRONTEND_URL
+
+SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_AUTO_SIGNUP = True  # Enable auto-signup for social accounts
+SOCIALACCOUNT_EMAIL_REQUIRED = True  # Require email for social accounts
+
+# LOGOUT_REDIRCT_URL = "/"

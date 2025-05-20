@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from rest_framework import serializers
@@ -22,8 +23,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password', 'is_active', 'is_staff']
-        read_only_fields = ['id', 'is_active', 'is_staff']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password', 'is_active']
+        read_only_fields = ['id', 'is_active']
 
     def validate_email(self, value):
         # Add custom email validation
@@ -31,20 +32,20 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This email is already in use.")
         return value
 
-    def validate_username(self, value):
-        # Add custom username validation
-        if len(value) < 3:
-            raise serializers.ValidationError("Username must be at least 3 characters long.")
-        return value
-
     def create(self, validated_data):
         user = User.objects.create_user(
-            # username=validated_data['username'],
             email=validated_data.get('email', ''),
             password=validated_data['password'],
             first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', '')
+            last_name=validated_data.get('last_name', ''),
+            username=validated_data.get('first_name') + validated_data.get('last_name')
         )
+        # Assign the user to the "Visitor" group
+        try:
+            visitor_group = Group.objects.get(name='visitor')
+            user.groups.add(visitor_group)
+        except Group.DoesNotExist:
+            raise serializers.ValidationError("The 'Visitor' group does not exist. Please create it first.")
         return user
 
 
@@ -55,6 +56,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Add custom claims if needed Add profiles [Student, Prof, It, Vistor]
         token['email'] = user.email
         token['first_name'] = user.first_name
+        token['last_name'] = user.last_name
+        token['full_name'] = user.first_name + user.last_name
+        # Add user's role based on their group
+        token['role'] = [group.name for group in user.groups.all()] if user.groups.exists() else ['No Role']
         return token
 
 
@@ -95,14 +100,14 @@ class PasswordResetSerializer(serializers.Serializer):
     def save(self):
         email = self.validated_data['email']
         user = User.objects.get(email=email)
-        
+
         # Generate token and uid
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
-        
+
         # Construct reset URL 
-        reset_url = f"{settings.FRONTEND_URL}/metronic8/react/demo8/reset-password/{uid}/{token}/"
-        
+        reset_url = f"{settings.FRONTEND_URL}/auth/reset-password/{uid}/{token}/"
+
         # Send email
         send_mail(
             subject='Password Reset Request',
@@ -111,6 +116,7 @@ class PasswordResetSerializer(serializers.Serializer):
             recipient_list=[email],
             fail_silently=False,
         )
+
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     uid = serializers.CharField()
@@ -124,7 +130,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         if not any(char.isupper() for char in value):
             raise serializers.ValidationError("Password must contain at least one uppercase letter")
         return value
-    
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -147,6 +153,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if len(value) < 3:
             raise serializers.ValidationError("Username must be at least 3 characters long.")
         return value
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True)
