@@ -1,0 +1,58 @@
+/* Advisor Analytics Dashboard */
+.advisor-analytics {
+    width: 89.9%;
+    min-height: 100vh;
+    padding: 4rem;
+    background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
+    color: white;
+  }
+  
+  .advisor-analytics h2 {
+    color: #b32129;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2.2rem;
+    text-transform: uppercase;
+  }
+  
+  /* Advisor-specific stats */
+  .advisor-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+  }
+  
+  .advisor-stat-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .advisor-stat-card h3 {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    margin: 0 0 1rem 0;
+  }
+  
+  .advisor-stat-card p {
+    color: white;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  
+  /* Shared chart styles (reuse from student analytics) */
+  .charts-container, .chart-card {
+    /* Same as student analytics */
+  }
+  
+  @media (max-width: 768px) {
+    .advisor-stats {
+      grid-template-columns: 1fr;
+    }
+  }
