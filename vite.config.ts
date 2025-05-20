@@ -8,4 +8,8 @@ export default defineConfig({
     chunkSizeWarningLimit: 3000,
     sourcemap: true
   },
+  server: {
+    host: true,
+    allowedHosts: ['cse455.local'],
+  },
 })
