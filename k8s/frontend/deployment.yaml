@@ -21,10 +21,10 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: aiu-advising-frontend-dev:latest
+        image: aiu-advising-frontend-simple:latest
         imagePullPolicy: Never
         ports:
-        - containerPort: 5173
+        - containerPort: 80
         env:
         - name: GRADE_SERVICE_URL
           value: "http://grade-simulator-service/simulator"
@@ -38,6 +38,8 @@ spec:
           value: "true"
         - name: VITE_DEVELOPMENT_MODE
           value: "true"
+        - name: VITE_APP_API_URL
+          value: "http://grade-simulator-service/simulator"
 
         resources:
           requests:

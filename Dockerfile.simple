@@ -1,0 +1,23 @@
+FROM node:18-alpine as builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build-only
+
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
+# Remove default nginx static assets
+RUN rm -rf ./*
+# Copy static assets from builder stage
+COPY --from=builder /app/dist .
+# Add script to inject auth tokens
+RUN echo 'localStorage.setItem("kt-auth-react-v", JSON.stringify({api_token:"dev-bypass-token",refreshToken:"dev-bypass-refresh-token"}));' > auth-setup.js
+# Modify index.html to include the auth script
+RUN sed -i 's/<head>/<head><script src="auth-setup.js"><\/script>/' index.html
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Expose port 80
+EXPOSE 80
+# Start Nginx server
+CMD ["nginx", "-g", "daemon off;"] 
