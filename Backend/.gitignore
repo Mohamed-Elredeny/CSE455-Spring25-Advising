@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+.venv/
+ENV/
+env.bak/
+.venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Django
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3  # Exclude SQLite database (if used)
+migrations/  # Exclude migration files (optional, see note below)
+staticfiles/  # Collected static files
+media/  # User-uploaded media files
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Docker
+Dockerfile.local
+docker-compose.local.yml
+*.dockerignore
+*.log
+
+# IDEs and Editors
+.idea/  # PyCharm
+*.sublime-workspace
+*.sublime-project
+.vscode/  # Visual Studio Code
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Testing
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+pytest_cache/
+
+# Build and distribution
+build/
+dist/
+*.egg
+*.egg-info/
+*.manifest
+*.spec
+
+# Miscellaneous
+*.bak
+*.backup
+*.tmp
+*.temp
