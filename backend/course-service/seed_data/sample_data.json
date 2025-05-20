@@ -1,0 +1,187 @@
+{
+  "categories": [
+    {"name": "Core", "description": "Core computer science courses"},
+    {"name": "Elective", "description": "Elective courses"},
+    {"name": "AI", "description": "Artificial Intelligence courses"},
+    {"name": "Systems", "description": "Systems and networks courses"},
+    {"name": "Theory", "description": "Theoretical computer science"},
+    {"name": "Data Science", "description": "Data science and analytics courses"}
+  ],
+  "courses": [
+    {
+      "course_id": "CSE101",
+      "title": "Introduction to Computer Science",
+      "description": "An introductory course to computer science and programming",
+      "instructor": "Dr. John Smith",
+      "credits": 4,
+      "department": "CSE",
+      "is_core": true,
+      "level": 100,
+      "categories": ["Core"],
+      "prerequisites": [],
+      "sections": [
+        {
+          "section_id": "CSE101-A",
+          "instructor": "Dr. John Smith",
+          "capacity": 50,
+          "schedule_day": "Monday",
+          "schedule_time": "10:00-11:50"
+        },
+        {
+          "section_id": "CSE101-B",
+          "instructor": "Dr. Jane Doe",
+          "capacity": 50,
+          "schedule_day": "Wednesday",
+          "schedule_time": "10:00-11:50"
+        }
+      ]
+    },
+    {
+      "course_id": "CSE142",
+      "title": "Computer Programming I",
+      "description": "Introduction to programming using Java",
+      "instructor": "Dr. Emily Chen",
+      "credits": 4,
+      "department": "CSE",
+      "is_core": true,
+      "level": 100,
+      "categories": ["Core"],
+      "prerequisites": [],
+      "sections": [
+        {
+          "section_id": "CSE142-A",
+          "instructor": "Dr. Emily Chen",
+          "capacity": 120,
+          "schedule_day": "Tuesday",
+          "schedule_time": "10:00-11:50"
+        }
+      ]
+    },
+    {
+      "course_id": "CSE143",
+      "title": "Computer Programming II",
+      "description": "Advanced programming techniques using Java",
+      "instructor": "Dr. Robert Davis",
+      "credits": 4,
+      "department": "CSE",
+      "is_core": true,
+      "level": 100,
+      "categories": ["Core"],
+      "prerequisites": ["CSE142"],
+      "sections": [
+        {
+          "section_id": "CSE143-A",
+          "instructor": "Dr. Robert Davis",
+          "capacity": 120,
+          "schedule_day": "Thursday",
+          "schedule_time": "10:00-11:50"
+        }
+      ]
+    },
+    {
+      "course_id": "CSE373",
+      "title": "Data Structures and Algorithms",
+      "description": "Study of algorithms and data structures",
+      "instructor": "Dr. Alice Johnson",
+      "credits": 4,
+      "department": "CSE",
+      "is_core": true,
+      "level": 300,
+      "categories": ["Core", "Theory"],
+      "prerequisites": ["CSE143"],
+      "sections": [
+        {
+          "section_id": "CSE373-A",
+          "instructor": "Dr. Alice Johnson",
+          "capacity": 80,
+          "schedule_day": "Monday",
+          "schedule_time": "13:00-14:50"
+        }
+      ]
+    },
+    {
+      "course_id": "CSE455",
+      "title": "Computer Vision",
+      "description": "Introduction to computer vision algorithms and applications",
+      "instructor": "Dr. Maria Rodriguez",
+      "credits": 4,
+      "department": "CSE",
+      "is_core": false,
+      "level": 400,
+      "categories": ["AI", "Data Science"],
+      "prerequisites": ["CSE373"],
+      "sections": [
+        {
+          "section_id": "CSE455-A",
+          "instructor": "Dr. Maria Rodriguez",
+          "capacity": 60,
+          "schedule_day": "Tuesday",
+          "schedule_time": "15:00-16:50"
+        }
+      ]
+    },
+    {
+      "course_id": "CSE490A",
+      "title": "Natural Language Processing",
+      "description": "Processing and understanding human language with computers",
+      "instructor": "Dr. Michael Lee",
+      "credits": 4,
+      "department": "CSE",
+      "is_core": false,
+      "level": 400,
+      "categories": ["AI", "Elective"],
+      "prerequisites": ["CSE373"],
+      "sections": [
+        {
+          "section_id": "CSE490A-A",
+          "instructor": "Dr. Michael Lee",
+          "capacity": 40,
+          "schedule_day": "Wednesday",
+          "schedule_time": "15:00-16:50"
+        }
+      ]
+    },
+    {
+      "course_id": "CSE401",
+      "title": "Compiler Construction",
+      "description": "Principles and practice of building efficient compilers",
+      "instructor": "Dr. James Wilson",
+      "credits": 4,
+      "department": "CSE",
+      "is_core": false,
+      "level": 400,
+      "categories": ["Systems", "Elective"],
+      "prerequisites": ["CSE373"],
+      "sections": [
+        {
+          "section_id": "CSE401-A",
+          "instructor": "Dr. James Wilson",
+          "capacity": 35,
+          "schedule_day": "Thursday",
+          "schedule_time": "13:00-14:50"
+        }
+      ]
+    },
+    {
+      "course_id": "CSE451",
+      "title": "Operating Systems",
+      "description": "Principles of operating systems design and implementation",
+      "instructor": "Dr. Sarah Brown",
+      "credits": 4,
+      "department": "CSE",
+      "is_core": false,
+      "level": 400,
+      "categories": ["Systems", "Elective"],
+      "prerequisites": ["CSE373"],
+      "sections": [
+        {
+          "section_id": "CSE451-A",
+          "instructor": "Dr. Sarah Brown",
+          "capacity": 50,
+          "schedule_day": "Friday",
+          "schedule_time": "10:00-11:50"
+        }
+      ]
+    }
+  ]
+}

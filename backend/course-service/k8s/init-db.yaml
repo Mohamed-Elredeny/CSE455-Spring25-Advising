@@ -3,14 +3,17 @@ kind: Job
 metadata:
   name: init-db
 spec:
+  ttlSecondsAfterFinished: 100
   template:
     spec:
       containers:
       - name: init-db
-        image: course-api:latest
-        imagePullPolicy: IfNotPresent
-        envFrom:
-        - configMapRef:
-            name: course-api-config
+        image: adhamafis/course-service:latest
         command: ["python", "init_db.py"]
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: course-service-config
+              key: DATABASE_URL
       restartPolicy: OnFailure 

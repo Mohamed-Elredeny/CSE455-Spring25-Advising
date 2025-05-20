@@ -275,3 +275,121 @@ POST /courses/
     }
   ]
 } 
+```
+
+# Course Service
+
+A microservice for managing university courses, sections, and categories.
+
+## Features
+
+- RESTful API for course management
+- Database integration with PostgreSQL
+- Caching with Redis
+- Prometheus monitoring
+- Kubernetes deployment with horizontal scaling
+
+## Docker Containerization
+
+The service is containerized using Docker with a multi-stage build process:
+
+1. **Build stage**: Compiles dependencies and creates wheels
+2. **Final stage**: Creates a slim production image with only runtime dependencies
+3. **Security**: Runs as a non-root user
+
+### Building the Docker Image
+
+```bash
+# Build the image
+docker build -t your-dockerhub-username/course-service:latest .
+
+# Run the container locally
+docker run -p 8000:8000 your-dockerhub-username/course-service:latest
+```
+
+### Pushing to DockerHub
+
+```bash
+# Login to DockerHub
+docker login
+
+# Push the image
+docker push your-dockerhub-username/course-service:latest
+```
+
+## Kubernetes Deployment
+
+The service is deployed to Kubernetes with:
+
+- **Deployment**: 2 replicas with liveness and readiness probes
+- **Service**: ClusterIP type for internal cluster access
+- **ConfigMap**: Environment variables configuration
+- **HPA**: Automatic scaling based on CPU utilization (70%)
+
+### Deployment Instructions
+
+See the [k8s/README.md](k8s/README.md) file for detailed deployment instructions.
+
+Quick start:
+
+```bash
+# Update image name in deployment.yaml
+# Then apply the manifests
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/hpa.yaml
+```
+
+## API Documentation
+
+The API provides endpoints for managing:
+
+- Courses (CRUD operations)
+- Course sections
+- Course categories
+
+For detailed API documentation, see [docs/api/endpoints.md](docs/api/endpoints.md).
+
+## Local Development
+
+### Prerequisites
+
+- Python 3.9+
+- PostgreSQL
+- Redis
+
+### Setup
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/course-service.git
+cd course-service
+```
+
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Start dependencies (PostgreSQL and Redis):
+
+```bash
+docker-compose up -d db redis
+```
+
+4. Run database migrations:
+
+```bash
+python init_db.py
+```
+
+5. Start the application:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+The API will be available at [http://localhost:8000](http://localhost:8000).

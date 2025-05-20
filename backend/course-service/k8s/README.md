@@ -1,175 +1,119 @@
-# Kubernetes Deployment Guide
+# Course Service Kubernetes Deployment
 
-This guide explains how to deploy the Course Advising API to a Kubernetes cluster.
+This directory contains Kubernetes manifests for deploying the Course Service.
 
 ## Prerequisites
 
-- Kubernetes cluster (local or cloud-based)
-- `kubectl` configured to access your cluster
-- Docker image of the application built and pushed to a container registry
+- Docker installed
+- DockerHub account
+- Kubernetes cluster (Minikube, Kind, or a cloud provider)
+- kubectl installed and configured
 
-## Directory Structure
+## Files
 
-```
-k8s/
-├── configmap.yaml      # Environment variables configuration
-├── postgres.yaml      # PostgreSQL deployment and service
-├── app.yaml           # FastAPI application deployment and service
-└── init-db.yaml       # Database initialization job
-```
+- `configmap.yaml`: Environment variables for the Course Service
+- `deployment.yaml`: Deployment configuration with 2 replicas and health probes
+- `service.yaml`: ClusterIP service to expose the API within the cluster
+- `hpa.yaml`: Horizontal Pod Autoscaler for automatic scaling
+- `postgres.yaml`: PostgreSQL database deployment with persistent storage
+- `redis.yaml`: Redis cache deployment with persistent storage
+- `init-db.yaml`: Job for running database migrations
 
-## Deployment Steps
+## Deployment Instructions
 
-1. **Build and Push Docker Image**
+### 1. Update Docker Image Name
 
-   First, build and push your Docker image to a container registry:
-   ```bash
-   docker build -t your-registry/course-api:latest .
-   docker push your-registry/course-api:latest
-   ```
+Before deploying, update the Docker image name in the `deployment.yaml` file to use your DockerHub username:
 
-2. **Update Image Reference**
-
-   Update the image reference in `app.yaml` and `init-db.yaml` to point to your container registry:
-   ```yaml
-   image: your-registry/course-api:latest
-   ```
-
-3. **Deploy to Kubernetes**
-
-   Apply the manifests in the following order:
-   ```bash
-   # Create ConfigMap
-   kubectl apply -f configmap.yaml
-
-   # Deploy PostgreSQL
-   kubectl apply -f postgres.yaml
-
-   # Initialize the database
-   kubectl apply -f init-db.yaml
-
-   # Deploy the application
-   kubectl apply -f app.yaml
-   ```
-
-4. **Verify Deployment**
-
-   Check the status of your deployments:
-   ```bash
-   kubectl get pods
-   kubectl get services
-   ```
-
-   The application will be accessible through the LoadBalancer service. Get the external IP:
-   ```bash
-   kubectl get service course-api
-   ```
-
-## Configuration
-
-### Environment Variables
-
-The application uses a ConfigMap for environment variables. You can modify these in `configmap.yaml`:
-
-- `DATABASE_URL`: PostgreSQL connection string
-- `POSTGRES_USER`: Database username
-- `POSTGRES_PASSWORD`: Database password
-- `POSTGRES_DB`: Database name
-
-### Scaling
-
-To scale the application, modify the `replicas` field in `app.yaml`:
 ```yaml
-spec:
-  replicas: 3  # Change this number to scale
+image: your-dockerhub-username/course-service:latest
 ```
 
-### Storage
+### 2. Build and Push Docker Image
 
-The PostgreSQL data is persisted using a PersistentVolumeClaim. The storage size can be adjusted in `postgres.yaml`:
-```yaml
-resources:
-  requests:
-    storage: 1Gi  # Adjust this value as needed
-```
-
-## Health Checks
-
-The application includes readiness and liveness probes that check the `/health` endpoint:
-- Readiness probe: Checks every 10 seconds after an initial 5-second delay
-- Liveness probe: Checks every 20 seconds after an initial 15-second delay
-
-## Troubleshooting
-
-1. **Check Pod Logs**
-   ```bash
-   kubectl logs -f deployment/course-api
-   ```
-
-2. **Check Database Initialization**
-   ```bash
-   kubectl logs -f job/init-db
-   ```
-
-3. **Check Persistent Volume**
-   ```bash
-   kubectl get pvc
-   kubectl get pv
-   ```
-
-4. **Check Service Status**
-   ```bash
-   kubectl describe service course-api
-   ```
-
-## Cleanup
-
-To remove all resources:
 ```bash
-kubectl delete -f .
+# Login to DockerHub
+docker login
+
+# Build and tag the image
+docker build -t your-dockerhub-username/course-service:latest ..
+
+# Push to DockerHub
+docker push your-dockerhub-username/course-service:latest
 ```
 
-## Notes
+### 3. Apply Kubernetes Manifests
 
-- The application service is exposed as a LoadBalancer. For local development, you might want to change it to NodePort.
-- The database initialization job runs once to set up the database schema.
-- Make sure your Kubernetes cluster has enough resources allocated for the application and database.
+For proper deployment, follow this order:
 
-## Caching
+```bash
+# Create database and cache deployments first
+kubectl apply -f postgres.yaml
+kubectl apply -f redis.yaml
 
-The application uses Redis for caching to improve performance. The caching configuration includes:
+# Wait for the database and cache to be ready
+kubectl wait --for=condition=ready pod -l app=postgres --timeout=120s
+kubectl wait --for=condition=ready pod -l app=redis --timeout=60s
 
-- Redis deployment with persistent storage
-- Configurable cache TTL (default: 1 hour)
-- Cache invalidation support
-- Environment-based cache enable/disable
+# Create ConfigMap
+kubectl apply -f configmap.yaml
 
-### Cache Configuration
+# Initialize the database
+kubectl apply -f init-db.yaml
+kubectl wait --for=condition=complete job/init-db --timeout=120s
 
-Cache settings can be configured in the ConfigMap (`configmap.yaml`):
+# Apply app deployment
+kubectl apply -f deployment.yaml
 
-- `REDIS_HOST`: Redis service hostname
-- `REDIS_PORT`: Redis service port
-- `CACHE_TTL`: Cache time-to-live in seconds
-- `CACHE_ENABLED`: Enable/disable caching
+# Create Service
+kubectl apply -f service.yaml
 
-### Using the Cache
-
-The cache can be used in your code using the `@cached` decorator:
-
-```python
-from app.utils.cache import cached
-
-@cached(ttl=1800)  # Cache for 30 minutes
-async def get_course_catalog():
-    # Your implementation here
-    pass
+# Apply HPA
+kubectl apply -f hpa.yaml
 ```
 
-To invalidate cache entries:
-```python
-from app.utils.cache import invalidate_cache
+Alternatively, use the provided deployment script:
 
-# Invalidate all cache entries for a specific prefix
-invalidate_cache("get_course_catalog")
-``` 
+```bash
+# From the root directory
+./scripts/deploy.sh
+```
+
+### 4. Verify Deployment
+
+```bash
+# Check if pods are running
+kubectl get pods -l app=course-service
+
+# Check if service is created
+kubectl get svc course-service
+
+# Check if HPA is configured
+kubectl get hpa course-service-hpa
+```
+
+### 5. Testing Load Balancing
+
+To verify load balancing across multiple pods, create a temporary pod with curl:
+
+```bash
+kubectl run curl-test --image=curlimages/curl -i --tty --rm -- sh
+```
+
+Then, from within the pod, send multiple requests:
+
+```bash
+for i in {1..10}; do
+  curl http://course-service/
+done
+```
+
+### 6. Accessing the Service
+
+To access the service locally during development:
+
+```bash
+kubectl port-forward svc/course-service 8000:80
+```
+
+Then you can access the API at http://localhost:8000 

@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from starlette_prometheus import metrics, PrometheusMiddleware
+import socket
+import os
 
 from app.routers import courses, sections, categories
 from app.database.database import engine, Base
@@ -26,10 +28,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add Prometheus middleware
-app.add_middleware(PrometheusMiddleware)
-app.add_route("/metrics", metrics)
-
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -38,6 +36,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add hostname middleware
+@app.middleware("http")
+async def add_hostname_header(request: Request, call_next):
+    response = await call_next(request)
+    hostname = socket.gethostname()
+    pod_name = os.environ.get('HOSTNAME', hostname)  # In K8s, HOSTNAME is set to pod name
+    response.headers["X-Hostname"] = pod_name
+    response.headers["X-Pod"] = pod_name  # Add a second header just in case
+    return response
+
+# Add Prometheus middleware
+app.add_middleware(PrometheusMiddleware)
+app.add_route("/metrics", metrics)
 
 # Add exception handlers
 @app.exception_handler(RequestValidationError)
@@ -96,4 +108,4 @@ def read_root():
         "message": "Welcome to the Course Management API",
         "docs": "/docs",
         "openapi": "/openapi.json"
-    } 
+    }
