@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: advising-service
+  labels:
+    app: advising-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: advising-service
+  template:
+    metadata:
+      labels:
+        app: advising-service
+    spec:
+      containers:
+      - name: advising-service
+        image: amrnawar/advising-service:latest
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        env:
+        - name: MONGODB_URI
+          value: "mongodb://mongodb:27017/advising_system"
+        - name: DATABASE_NAME
+          value: "advising_system"
+        - name: FLASK_ENV
+          value: "production" 
