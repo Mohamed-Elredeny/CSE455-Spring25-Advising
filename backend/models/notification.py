@@ -2,7 +2,7 @@ import uuid
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, Dict
-
+ 
 class NotificationBase(BaseModel):
     user_id: str
     type: str  # Changed from NotificationType enum to str for flexibility
@@ -41,4 +41,3 @@ class Notification(NotificationBase):
             datetime: lambda v: v.isoformat()
         }
 
-        
