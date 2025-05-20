@@ -1,119 +1,57 @@
 const express = require('express');
-const sequelize = require('./config/database');
 const cors = require('cors');
 
-// Import models
-const Semester = require('./models/Semester');
-const Course = require('./models/Course');
-const Grade = require('./models/Grade');
-const ProgramPlan = require('./models/ProgramPlan');
-const GraduationRequirement = require('./models/GraduationRequirement');
-const Student = require('./models/Student');
-const Prerequisite = require('./models/Prerequisite');
+
+
 
 // Import routes
 const semesterRoutes = require('./routes/semesterRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const gpaRuleRoutes = require('./routes/gpaRuleRoutes');
 const courseRoutes = require('./routes/courseRoutes');
-const gradeRoutes = require('./routes/gradeRoutes');
 const programPlanRoutes = require('./routes/programPlanRoutes');
 const graduationRequirementRoutes = require('./routes/graduationRequirementRoutes');
 const gpaCalculatorRoutes = require('./routes/gpaCalculatorRoutes');
 const graduationRoutes = require('./routes/graduationRoutes');
 
 const app = express();
+
 app.use(express.json());
-app.use(cors());
+// ... existing code ...
 
-// ======================
-// Model Associations
-// ======================
+app.use(express.json());
+app.use(cors({
+  origin: '*', // Allow all origins
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+})); 
 
-// Student-Grade relationships
-Student.hasMany(Grade, {
-  foreignKey: 'student_id',
-  as: 'grades'
-});
-Grade.belongsTo(Student, {
-  foreignKey: 'student_id',
-  as: 'student'
-});
 
-// Course-Grade relationships
-Course.hasMany(Grade, {
-  foreignKey: 'course_id',
-  as: 'grades'
-});
-Grade.belongsTo(Course, {
-  foreignKey: 'course_id',
-  as: 'course' // Lowercase alias
-});
-
-// Semester-Grade relationships
-Semester.hasMany(Grade, {
-  foreignKey: 'semester_id',
-  as: 'grades'
-});
-Grade.belongsTo(Semester, {
-  foreignKey: 'semester_id',
-  as: 'semester'
-});
-
-// ProgramPlan relationship
-ProgramPlan.belongsTo(Course, { 
-  foreignKey: 'course_id',
-  as: 'course'
-});
-
-// Prerequisite relationships (using actual table name)
-// In your main file
-Course.belongsToMany(Course, {
-  as: 'prerequisites',
-  through: Prerequisite, // Reference the model directly
-  foreignKey: 'course_id',
-  otherKey: 'prerequisite_course_id'
-});
-
-Course.belongsToMany(Course, {
-  as: 'dependentCourses',
-  through: Prerequisite,
-  foreignKey: 'prerequisite_course_id',
-  otherKey: 'course_id'
-});
-
-// Graduation Requirements
-GraduationRequirement.belongsTo(Course, {
-  foreignKey: 'course_id',
-  as: 'course'
-});
-
-// ======================
-// Database Setup
-// ======================
-sequelize.authenticate()
-  .then(() => console.log('Connected to MySQL database'))
-  .catch(err => console.error('Connection error:', err));
-
-sequelize.sync({ 
-  force: false,
-  alter: true
-})
-.then(() => console.log('Database synchronized'))
-.catch(err => console.error('Sync error:', err));
 
 // ======================
 // Route Mounting
 // ======================
 app.use('/simulator/', studentRoutes);
 app.use('/simulator/', courseRoutes);
-app.use('/simulator/', gradeRoutes);
 app.use('/simulator/', semesterRoutes);
 app.use('/simulator/', gpaRuleRoutes);
 app.use('/simulator/', programPlanRoutes);
 app.use('/simulator/', graduationRequirementRoutes);
 app.use('/simulator/', gpaCalculatorRoutes);
 app.use('/simulator/', graduationRoutes);
+
+// ======================
+// Health Check Endpoint
+// ======================
+app.get('/simulator/health', (req, res) => {
+  const podName = process.env.HOSTNAME || 'unknown-pod';
+  console.log(`Health check received by pod: ${podName}`);
+  res.status(200).json({ 
+    status: 'healthy',
+    pod: podName 
+  });
+});
 
 // ======================
 // Error Handling Middleware

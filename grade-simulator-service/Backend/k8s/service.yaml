@@ -1,12 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: grade-simulator-backend
+  name: grade-simulator-service
+  labels:
+    app: grade-simulator-service
 spec:
+  type: ClusterIP
   selector:
-    app: grade-simulator-backend
+    app: grade-simulator-service
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 3000
-  type: LoadBalancer 
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http 

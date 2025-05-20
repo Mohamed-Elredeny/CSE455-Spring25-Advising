@@ -1,24 +1,46 @@
-const Student = require('../models/Student');
-const Grade = require('../models/Grade');
-const Course = require('../models/Course');
-const ProgramPlan = require('../models/ProgramPlan');
+const axios = require('axios');
+const { endpoints } = require('../config/pythonApi');
+
+// Helper function to handle API errors
+const handleApiError = (err, res) => {
+  console.error('API Error:', err);
+  if (err.response) {
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    return res.status(err.response.status).json(err.response.data);
+  } else if (err.request) {
+    // The request was made but no response was received
+    return res.status(503).json({ 
+      error: 'Python API service unavailable',
+      details: err.message
+    });
+  } else {
+    // Something happened in setting up the request that triggered an Error
+    return res.status(500).json({ 
+      error: 'Internal Server Error',
+      details: err.message
+    });
+  }
+};
 
 exports.getAllStudents = async (req, res) => {
   try {
-    const students = await Student.findAll();
+    const response = await axios.get(endpoints.students);
+    const students = response.data;
     res.json(students);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    handleApiError(err, res);
   }
 };
 
 exports.getStudentById = async (req, res) => {
   try {
-    const student = await Student.findByPk(req.params.id);
+    const response = await axios.get(`${endpoints.students}/${req.params.id}`);
+    const student = response.data;
     if (!student) return res.status(404).json({ error: 'Student not found' });
     res.json(student);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    handleApiError(err, res);
   }
 };
 
@@ -27,34 +49,27 @@ exports.getStudentProgramCourses = async (req, res) => {
 
   try {
     // Fetch student
-    const student = await Student.findByPk(id);
+    const studentResponse = await axios.get(`${endpoints.students}/${id}`);
+    const student = studentResponse.data;
     if (!student) {
       return res.status(404).json({ error: 'Student not found' });
     }
 
     // Fetch program plan courses with course details
-    const programPlanCourses = await ProgramPlan.findAll({
-      where: { program_id: student.program_id },
-      include: [{
-        model: Course,
-        as: 'course',
-        required: true
-      }]
-    });
+    const programPlansResponse = await axios.get(endpoints.programPlan(student.program_id));
+    const programPlanCourses = programPlansResponse.data;
 
     // Fetch student's existing grades
-    const grades = await Grade.findAll({
-      where: { student_id: id },
-      include: [{ model: Course, as: 'course' }]
-    });
+    const gradesResponse = await axios.get(endpoints.studentGrades(id));
+    const grades = gradesResponse.data;
 
     // Map program plan courses with grade information if available
     const courses = programPlanCourses.map(planCourse => {
       const existingGrade = grades.find(grade => grade.course_id === planCourse.course_id);
       return {
         course_id: planCourse.course_id,
-        course_name: planCourse.course.name,
-        credits: planCourse.course.credits,
+        course_name: planCourse.Course.name,
+        credits: planCourse.Course.credits,
         category: planCourse.category,
         current_grade: existingGrade ? existingGrade.grade : null,
         is_taken: !!existingGrade,
@@ -70,8 +85,7 @@ exports.getStudentProgramCourses = async (req, res) => {
       courses
     });
   } catch (err) {
-    console.error('Error in getStudentProgramCourses:', err);
-    res.status(500).json({ error: err.message });
+    handleApiError(err, res);
   }
 };
 

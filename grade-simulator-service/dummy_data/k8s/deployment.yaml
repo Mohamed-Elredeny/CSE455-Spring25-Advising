@@ -1,36 +1,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grade-simulator-service
+  name: dummy-data-service
   labels:
-    app: grade-simulator-service
+    app: dummy-data-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: grade-simulator-service
+      app: dummy-data-service
   template:
     metadata:
       labels:
-        app: grade-simulator-service
+        app: dummy-data-service
     spec:
       containers:
-      - name: grade-simulator-service
-        image: ali142/grade-simulator-service:latest
+      - name: dummy-data-service
+        image: ali142/dummy-data-service:latest
         ports:
-        - containerPort: 3000
+        - containerPort: 5002
         livenessProbe:
           httpGet:
-            path: /simulator/health
-            port: 3000
+            path: /api/health
+            port: 5002
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /simulator/health
-            port: 3000
+            path: /api/health
+            port: 5002
           initialDelaySeconds: 15
           periodSeconds: 5
           timeoutSeconds: 3
@@ -39,22 +39,19 @@ spec:
         resources:
           limits:
             cpu: "0.5"
-            memory: "512Mi"
-          requests:
-            cpu: "0.2"
             memory: "256Mi"
-        envFrom:
-        - configMapRef:
-            name: backend-config
+          requests:
+            cpu: "0.1"
+            memory: "128Mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: grade-simulator-service
+  name: dummy-data-service
 spec:
   selector:
-    app: grade-simulator-service
+    app: dummy-data-service
   ports:
-  - port: 80
-    targetPort: 3000
-  type: NodePort 
+  - port: 5002
+    targetPort: 5002
+  type: ClusterIP 
