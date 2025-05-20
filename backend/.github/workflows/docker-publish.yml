@@ -1,14 +1,20 @@
-name: Docker Build and Publish
+name: Backend Docker Build and Publish
 
 on:
   push:
     branches: 
-      - course-service
+      - main
+      - master
+    paths:
+      - 'backend/**'
     tags: 
       - 'v*'
   pull_request:
     branches: 
-      - course-service
+      - main
+      - master
+    paths:
+      - 'backend/**'
       
   # Allow manual workflow execution from GitHub UI
   workflow_dispatch:

@@ -1,10 +1,14 @@
-name: API Tests
+name: Backend API Tests
 
 on:
   push:
-    branches: [ 'course-service' ]
+    branches: [ '*' ]
+    paths:
+      - 'backend/**'
   pull_request:
-    branches: [ 'course-service' ]
+    branches: [ '*' ]
+    paths:
+      - 'backend/**'
 
 jobs:
   test:
@@ -28,6 +32,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
+    - name: Change to course-service directory
+      run: cd backend/course-service
+
     - name: Set up Python 3.9
       uses: actions/setup-python@v4
       with:
