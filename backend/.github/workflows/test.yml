@@ -32,29 +32,29 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Change to course-service directory
-      run: cd backend/course-service
-
     - name: Set up Python 3.9
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
     
     - name: Install dependencies
+      working-directory: backend/course-service
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pytest pytest-cov
     
     - name: Run migrations
+      working-directory: backend/course-service
       run: |
         export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/courses
-        python -c "from alembic import command; from alembic.config import Config; config = Config('alembic.ini'); command.upgrade(config, 'head')"
+        alembic upgrade head
     
     - name: Test with pytest
+      working-directory: backend/course-service
       run: |
         export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/courses
-        pytest --cov=app --cov-report=term-missing
+        pytest --cov=app --cov-report=term-missing --cov-report=xml
     
     - name: Upload coverage report
       uses: codecov/codecov-action@v3
