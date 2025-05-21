@@ -2,11 +2,11 @@ name: Backend CI/CD
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ '*' ]
     paths:
       - 'backend/**'
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [ '*' ]
     paths:
       - 'backend/**'
   workflow_dispatch:
@@ -18,8 +18,19 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
-    - name: Deploy to Kubernetes
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+    
+    - name: Configure kubectl
       run: |
-        cd backend/course-service/scripts
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+    
+    - name: Deploy to Kubernetes
+      working-directory: backend/course-service/scripts
+      run: |
         chmod +x deploy.sh
         ./deploy.sh
