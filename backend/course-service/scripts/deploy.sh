@@ -6,12 +6,9 @@ DOCKERHUB_USERNAME="adhamafis"  # Change this to your DockerHub username
 IMAGE_NAME="course-service"
 IMAGE_TAG="latest"
 
-# Build and push Docker image
-echo "Building Docker image..."
-docker build -t $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG .
-
-echo "Pushing Docker image to DockerHub..."
-docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG
+# Pull Docker image from DockerHub
+echo "Pulling Docker image from DockerHub..."
+docker pull $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG
 
 # Replace placeholder in Kubernetes files
 echo "Replacing image placeholders in Kubernetes files..."

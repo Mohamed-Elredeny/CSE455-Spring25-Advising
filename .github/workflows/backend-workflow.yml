@@ -1,0 +1,25 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [ main, master, develop ]
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Deploy to Kubernetes
+      run: |
+        cd backend/course-service/scripts
+        chmod +x deploy.sh
+        ./deploy.sh
