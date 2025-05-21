@@ -3,22 +3,44 @@ from typing import List, Optional, Dict
 from enum import Enum
 
 class CourseCreate(BaseModel):
-    code: str
+    course_id: str
     title: str
-    credits: int
     description: Optional[str] = None
-    prerequisites: List[str] = []
+    instructor: Optional[str] = None
+    credits: int
+    department: str
+    is_core: bool = False
+    level: Optional[int] = None
+    prerequisites: List[str] = []  # List of prerequisite course IDs
 
 class Course(BaseModel):
-    id: int
-    code: str
+    course_id: str
     title: str
     credits: int
     description: Optional[str] = None
-    prerequisites: List[str] = []
+    instructor: Optional[str] = None
+    department: str
+    is_core: bool = False
+    level: Optional[int] = None
+    prerequisites: List[str] = []  # List of prerequisite course IDs
+    
 
     class Config:
-        from_attributes = True
+        orm_mode = True  # Enable serialization of SQLAlchemy objects
+
+    @classmethod
+    def from_orm_with_prerequisites(cls, course):
+        return cls(
+            course_id=course.course_id,
+            title=course.title,
+            credits=course.credits,
+            description=course.description,
+            instructor=course.instructor,
+            department=course.department,
+            is_core=course.is_core,
+            level=course.level,
+            prerequisites=[prerequisite.course_id for prerequisite in course.prerequisites]
+        )
 
 class SemesterCreate(BaseModel):
     name: str
@@ -39,7 +61,8 @@ class PlanGenerationRequest(BaseModel):
 
 
 class AcademicPlanCreate(BaseModel):
-    student_id: int = Field(..., description="ID of the student")
+    university: str = Field(..., description="University name (e.g., 'University of XYZ')")
+    department: str = Field(..., description="Department name (e.g., 'Computer Science')")
     program: str  # Add the program field
     semesters: List[SemesterCreate] = Field(..., description="List of semesters with courses")
 
@@ -50,11 +73,12 @@ class PlanStatus(str, Enum):
 
 class AcademicPlan(BaseModel):
     id: int
-    student_id: int
-    program: str  # Add the program field
-    version: int  # Add the version field
-    status: PlanStatus  # Add the status field 
-    semesters: List[Semester] = []  # List of semesters with courses
+    university: str = Field(..., description="University name (e.g., 'University of XYZ')")
+    department: str = Field(..., description="Department name (e.g., 'Computer Science')")
+    program: str  
+    version: int  
+    status: PlanStatus  
+    semesters: List[Semester] = []  
 
     class Config:
         from_attributes = True

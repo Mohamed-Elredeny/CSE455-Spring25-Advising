@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.routers import academic_plan, semester, course, requirement
 from app.core.database import Base, engine
 
@@ -10,6 +11,15 @@ app = FastAPI(
     title="Academic Plan Service",
     description="API for managing academic plans, semesters, and courses",
     version="1.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers
