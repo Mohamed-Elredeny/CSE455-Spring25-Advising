@@ -1,16 +1,23 @@
 from pydantic import BaseModel
-from typing import List
+from datetime import datetime
 
-class RequirementCreate(BaseModel):
+class RequirementBase(BaseModel):
     program: str
-    type: str
-    course_codes: List[str]  # List of course codes
+    total_hours: int
+    num_core_courses: int
+    num_elective_courses: int
 
-class Requirement(BaseModel):
-    id : int
-    program: str
-    type: str
-    course_code:str
+class RequirementCreate(RequirementBase):
+    pass
+
+class RequirementUpdate(BaseModel):
+    total_hours: int
+    num_core_courses: int
+    num_elective_courses: int
+
+class Requirement(RequirementBase):
+    id: int
+    created_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True

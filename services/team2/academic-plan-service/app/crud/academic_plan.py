@@ -6,13 +6,33 @@ from app.models.semester import Semester
 from app.models.course import Course
 from app.models.Requirement import Requirement
 from app.schemas.requirement import Requirement as RequirementSchema
-from app.models.academic_plan import PlanStatus  # Import PlanStatus
+from app.models.academic_plan import PlanStatus  
+from sqlalchemy.orm import joinedload
+from app.models.course import Course
 
 
 def create_academic_plan(db: Session, academic_plan: AcademicPlanCreate):
     try:
-        # Validate program
-        valid_programs = ["Computer Science", "Engineering", "Mathematics"]  # Example list of valid programs
+        # Fetch requirement for the program
+        requirement = db.query(Requirement).filter(Requirement.program == academic_plan.program).first()
+        if not requirement:
+            raise HTTPException(status_code=400, detail="No requirement found for this program.")
+
+        # Calculate plan stats
+        total_hours = sum(course.credits for semester in academic_plan.semesters for course in semester.courses)
+        num_core_courses = sum(1 for semester in academic_plan.semesters for course in semester.courses if course.is_core)
+        num_elective_courses = sum(1 for semester in academic_plan.semesters for course in semester.courses if not course.is_core)
+
+        # Validate against requirement
+        if total_hours < requirement.total_hours:
+            raise HTTPException(status_code=400, detail="Total hours less than required.")
+        if num_core_courses < requirement.num_core_courses:
+            raise HTTPException(status_code=400, detail="Not enough core courses.")
+        if num_elective_courses < requirement.num_elective_courses:
+            raise HTTPException(status_code=400, detail="Not enough elective courses.")
+
+        # Validate department
+        valid_programs = ["Computer Science", "Engineering", "Mathematics", "test", "string"]  
         if academic_plan.program not in valid_programs:
             raise HTTPException(status_code=400, detail=f"Invalid program: {academic_plan.program}")
 
@@ -33,24 +53,24 @@ def create_academic_plan(db: Session, academic_plan: AcademicPlanCreate):
             if not semester.courses:
                 raise HTTPException(status_code=400, detail=f"Semester '{semester.name}' must have at least one course.")
             
-            course_codes = set()
+            course_ids = set()
             semester_credits = 0
 
             for course in semester.courses:
-                if course.code in course_codes:
-                    raise HTTPException(status_code=400, detail=f"Duplicate course code '{course.code}' in semester '{semester.name}'.")
-                course_codes.add(course.code)
+                if course.course_id in course_ids:
+                    raise HTTPException(status_code=400, detail=f"Duplicate course ID '{course.course_id}' in semester '{semester.name}'.")
+                course_ids.add(course.course_id)
 
                 # Validate prerequisites
                 for prerequisite in course.prerequisites:
                     if prerequisite not in completed_courses:
                         raise HTTPException(
                             status_code=400,
-                            detail=f"Course '{course.code}' in semester '{semester.name}' has unmet prerequisite '{prerequisite}'."
+                            detail=f"Course '{course.course_id}' in semester '{semester.name}' has unmet prerequisite '{prerequisite}'."
                         )
 
                 # Add course to completed courses
-                completed_courses.add(course.code)
+                completed_courses.add(course.course_id)
 
                 # Add credits
                 semester_credits += course.credits
@@ -69,19 +89,11 @@ def create_academic_plan(db: Session, academic_plan: AcademicPlanCreate):
                 status_code=400,
                 detail=f"Academic plan does not meet the minimum total credit requirement of 120 credits (total: {total_credits})."
             )
-        # Check if a plan already exists for the student and program
-        existing_plans = db.query(AcademicPlanModel).filter(
-            AcademicPlanModel.student_id == academic_plan.student_id,
-            AcademicPlanModel.program == academic_plan.program
-        ).all()
-
-        # Determine the new version number
-        new_version = max([plan.version for plan in existing_plans], default=0) + 1
-
 
         # Create the academic plan
         db_academic_plan = AcademicPlanModel(
-            student_id=academic_plan.student_id,
+            university=academic_plan.university,
+            department=academic_plan.department,
             program=academic_plan.program
         )
         db.add(db_academic_plan)
@@ -97,14 +109,29 @@ def create_academic_plan(db: Session, academic_plan: AcademicPlanCreate):
 
             for course in semester.courses:
                 db_course = Course(
-                    code=course.code,
+                    course_id=course.course_id,
                     title=course.title,
-                    credits=course.credits,
                     description=course.description,
-                    prerequisites=course.prerequisites,
-                    semester_id=db_semester.id
+                    instructor=course.instructor,
+                    credits=course.credits,
+                    department=course.department,
+                    is_core=course.is_core,
+                    level=course.level,
+                    semester_id=db_semester.id  # Set the foreign key
                 )
                 db.add(db_course)
+                db.commit()
+                db.refresh(db_course)
+
+                # Add prerequisites
+                for prerequisite_id in course.prerequisites:
+                    prerequisite_course = db.query(Course).filter(Course.course_id == prerequisite_id).first()
+                    if not prerequisite_course:
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Prerequisite course '{prerequisite_id}' not found for course '{course.course_id}'."
+                        )
+                    db_course.prerequisites.append(prerequisite_course)
                 db.commit()
 
         return db_academic_plan
@@ -112,13 +139,83 @@ def create_academic_plan(db: Session, academic_plan: AcademicPlanCreate):
         raise HTTPException(status_code=500, detail=f"Failed to create academic plan: {str(e)}")
 
 def get_academic_plan(db: Session, academic_plan_id: int):
-    db_academic_plan = db.query(AcademicPlanModel).filter(AcademicPlanModel.id == academic_plan_id).first()
+    db_academic_plan = db.query(AcademicPlanModel).options(
+        joinedload(AcademicPlanModel.semesters).joinedload(Semester.courses)
+    ).filter(AcademicPlanModel.id == academic_plan_id).first()
+
     if not db_academic_plan:
         raise HTTPException(status_code=404, detail="Academic Plan not found")
-    return db_academic_plan
+
+    # Serialize the response
+    academic_plan = {
+        "id": db_academic_plan.id,
+        "university": db_academic_plan.university,
+        "department": db_academic_plan.department,
+        "program": db_academic_plan.program,
+        "version": db_academic_plan.version,
+        "status": db_academic_plan.status.value,
+        "semesters": [
+            {
+                "id": semester.id,
+                "name": semester.name,
+                "courses": [
+                    {
+                        "course_id": course.course_id,
+                        "title": course.title,
+                        "credits": course.credits,
+                        "description": course.description,
+                        "instructor": course.instructor,
+                        "department": course.department,
+                        "is_core": course.is_core,
+                        "level": course.level,
+                        "prerequisites": [pr.course_id for pr in course.prerequisites]
+                    }
+                    for course in semester.courses
+                ]
+            }
+            for semester in db_academic_plan.semesters
+        ]
+    }
+    return academic_plan
 
 def get_all_academic_plans(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(AcademicPlanModel).offset(skip).limit(limit).all()
+    db_academic_plans = db.query(AcademicPlanModel).options(
+        joinedload(AcademicPlanModel.semesters).joinedload(Semester.courses)
+    ).offset(skip).limit(limit).all()
+
+    # Serialize the response
+    academic_plans = []
+    for db_academic_plan in db_academic_plans:
+        academic_plans.append({
+            "id": db_academic_plan.id,
+            "university": db_academic_plan.university,
+            "department": db_academic_plan.department,
+            "program": db_academic_plan.program,
+            "version": db_academic_plan.version,
+            "status": db_academic_plan.status.value,
+            "semesters": [
+                {
+                    "id": semester.id,
+                    "name": semester.name,
+                    "courses": [
+                        {
+                            "course_id": course.course_id,
+                            "title": course.title,
+                            "credits": course.credits,
+                            "description": course.description,
+                            "instructor": course.instructor,
+                            "department": course.department,
+                            "is_core": course.is_core,
+                            "level": course.level,
+                            "prerequisites": [pr.course_id for pr in course.prerequisites]
+                        }
+                        for course in semester.courses
+                    ]
+                }
+                for semester in db_academic_plan.semesters
+            ]
+        })
+    return academic_plans
 
 def update_academic_plan(db: Session, academic_plan_id: int, academic_plan: AcademicPlanCreate):
     try:
@@ -127,18 +224,12 @@ def update_academic_plan(db: Session, academic_plan_id: int, academic_plan: Acad
         if not db_academic_plan:
             raise HTTPException(status_code=404, detail="Academic Plan not found")
 
-        # Determine the new version number
-        existing_plans = db.query(AcademicPlanModel).filter(
-            AcademicPlanModel.student_id == db_academic_plan.student_id,
-            AcademicPlanModel.program == db_academic_plan.program
-        ).all()
-        new_version = max([plan.version for plan in existing_plans], default=0) + 1
-
         # Create a new academic plan with the updated data
         new_plan = AcademicPlanModel(
-            student_id=db_academic_plan.student_id,
-            program=db_academic_plan.program,
-            version=new_version
+            university=academic_plan.university,
+            department=academic_plan.department,
+            program=academic_plan.program,
+            version=db_academic_plan.version + 1
         )
         db.add(new_plan)
         db.commit()
@@ -153,12 +244,15 @@ def update_academic_plan(db: Session, academic_plan_id: int, academic_plan: Acad
 
             for course in semester.courses:
                 db_course = Course(
-                    code=course.code,
+                    course_id=course.course_id,
                     title=course.title,
-                    credits=course.credits,
                     description=course.description,
-                    prerequisites=course.prerequisites,
-                    semester_id=db_semester.id
+                    instructor=course.instructor,
+                    credits=course.credits,
+                    department=course.department,
+                    is_core=course.is_core,
+                    level=course.level,
+                    semester_id=db_semester.id  
                 )
                 db.add(db_course)
                 db.commit()
@@ -193,28 +287,40 @@ def check_requirements_fulfillment(db: Session, academic_plan_id: int):
     if not academic_plan:
         raise HTTPException(status_code=404, detail="Academic Plan not found")
 
-    # Fetch requirements for the program
-    requirements = db.query(Requirement).filter(Requirement.program == academic_plan.program).all()
+    # Fetch requirement for the program
+    requirement = db.query(Requirement).filter(Requirement.program == academic_plan.program).first()
+    if not requirement:
+        raise HTTPException(status_code=404, detail="No requirement found for this program.")
 
-    # Track fulfilled and unfulfilled requirements
+    # Calculate plan stats
+    total_hours = sum(course.credits for semester in academic_plan.semesters for course in semester.courses)
+    num_core_courses = sum(1 for semester in academic_plan.semesters for course in semester.courses if course.is_core)
+    num_elective_courses = sum(1 for semester in academic_plan.semesters for course in semester.courses if not course.is_core)
+
+    # Prepare fulfillment report
     fulfilled = []
     unfulfilled = []
 
-    # Get all completed courses
-    completed_courses = {course.code for semester in academic_plan.semesters for course in semester.courses}
+    if total_hours >= requirement.total_hours:
+        fulfilled.append(f"Total hours: {total_hours} (required: {requirement.total_hours})")
+    else:
+        unfulfilled.append(f"Total hours: {total_hours} (required: {requirement.total_hours})")
 
-    for requirement in requirements:
-        if requirement.course_code in completed_courses:
-            fulfilled.append(RequirementSchema.from_orm(requirement))
-        else:
-            unfulfilled.append(RequirementSchema.from_orm(requirement))
+    if num_core_courses >= requirement.num_core_courses:
+        fulfilled.append(f"Core courses: {num_core_courses} (required: {requirement.num_core_courses})")
+    else:
+        unfulfilled.append(f"Core courses: {num_core_courses} (required: {requirement.num_core_courses})")
+
+    if num_elective_courses >= requirement.num_elective_courses:
+        fulfilled.append(f"Elective courses: {num_elective_courses} (required: {requirement.num_elective_courses})")
+    else:
+        unfulfilled.append(f"Elective courses: {num_elective_courses} (required: {requirement.num_elective_courses})")
 
     return {"fulfilled": fulfilled, "unfulfilled": unfulfilled}
 
-def restore_academic_plan_version(db: Session, student_id: int, program: str, version: int):
+def restore_academic_plan_version(db: Session, program: str, version: int):
     # Fetch the old version of the academic plan
     old_plan = db.query(AcademicPlanModel).filter(
-        AcademicPlanModel.student_id == student_id,
         AcademicPlanModel.program == program,
         AcademicPlanModel.version == version
     ).first()
@@ -224,14 +330,14 @@ def restore_academic_plan_version(db: Session, student_id: int, program: str, ve
 
     # Determine the new version number
     existing_plans = db.query(AcademicPlanModel).filter(
-        AcademicPlanModel.student_id == student_id,
         AcademicPlanModel.program == program
     ).all()
     new_version = max([plan.version for plan in existing_plans], default=0) + 1
 
     # Create a new academic plan based on the old version
     new_plan = AcademicPlanModel(
-        student_id=old_plan.student_id,
+        university=old_plan.university,
+        department=old_plan.department,
         program=old_plan.program,
         version=new_version
     )
@@ -248,11 +354,14 @@ def restore_academic_plan_version(db: Session, student_id: int, program: str, ve
 
         for old_course in old_semester.courses:
             new_course = Course(
-                code=old_course.code,
+                course_id=old_course.course_id,
                 title=old_course.title,
                 credits=old_course.credits,
                 description=old_course.description,
-                prerequisites=old_course.prerequisites,
+                instructor=old_course.instructor,
+                department=old_course.department,
+                is_core=old_course.is_core,
+                level=old_course.level,
                 semester_id=new_semester.id
             )
             db.add(new_course)
@@ -299,7 +408,8 @@ def compare_academic_plans(db: Session, plan_ids: list[int]):
         total_credits = sum(course.credits for semester in plan.semesters for course in semester.courses)
         comparison_result["plans"].append({
             "id": plan.id,
-            "student_id": plan.student_id,
+            "university": plan.university,
+            "department": plan.department,
             "program": plan.program,
             "version": plan.version,
             "status": plan.status.value,
@@ -307,7 +417,7 @@ def compare_academic_plans(db: Session, plan_ids: list[int]):
             "semesters": [
                 {
                     "name": semester.name,
-                    "courses": [{"code": course.code, "title": course.title, "credits": course.credits} for course in semester.courses]
+                    "courses": [{"course_id": course.course_id, "title": course.title, "credits": course.credits} for course in semester.courses]
                 }
                 for semester in plan.semesters
             ]
@@ -327,7 +437,7 @@ def compare_academic_plans(db: Session, plan_ids: list[int]):
         comparison_result["differences"]["semesters"] = list(unique_semesters)
 
         # Compare courses
-        course_sets = [{course["code"] for semester in plan["semesters"] for course in semester["courses"]} for plan in comparison_result["plans"]]
+        course_sets = [{course["course_id"] for semester in plan["semesters"] for course in semester["courses"]} for plan in comparison_result["plans"]]
         common_courses = set.intersection(*course_sets)
         unique_courses = set.union(*course_sets) - common_courses
         comparison_result["differences"]["courses"] = list(unique_courses)

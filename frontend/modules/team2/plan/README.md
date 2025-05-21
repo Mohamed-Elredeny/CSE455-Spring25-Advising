@@ -1,46 +1,192 @@
-# Getting Started with Create React App
+# React + TypeScript + Vite
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Available Scripts
+Currently, two official plugins are available:
 
-In the project directory, you can run:
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-### `npm start`
+## Expanding the ESLint configuration
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- Configure the top-level `parserOptions` property like this:
 
-### `npm test`
+```js
+   parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    project: ['./tsconfig.json', './tsconfig.node.json'],
+    tsconfigRootDir: __dirname,
+   },
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
+- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+university-advising-frontend/
+├── src/
+│   ├── modules/                 # Main feature modules by team
+│   │   ├── Team 1: Core Authentication & User Management/               # Team 1 services
+│   │   │   ├── auth/            # Authentication Service
+│   │   │   │   ├── components/  # UI components specific to auth
+│   │   │   │   ├── pages/       # Login, Register, etc.
+│   │   │   │   ├── hooks/       # Custom hooks
+│   │   │   │   ├── services/    # API calls to auth service
+│   │   │   │   ├── store/       # State management for auth
+│   │   │   │   └── routes.js    # Auth routes configuration
+│   │   │   │
+│   │   │   ├── profile/         # Student Profile Service
+│   │   │   │   ├── components/  
+│   │   │   │   ├── pages/       # Profile view, edit, etc.
+│   │   │   │   ├── hooks/
+│   │   │   │   ├── services/    # API calls to profile service
+│   │   │   │   ├── store/
+│   │   │   │   └── routes.js
+│   │   │   │
+│   │   │   └── admin/           # Admin Service
+│   │   │       ├── components/
+│   │   │       ├── pages/       # Admin dashboard, user management, etc.
+│   │   │       ├── hooks/
+│   │   │       ├── services/    # API calls to admin service
+│   │   │       ├── store/
+│   │   │       └── routes.js
+│   │   │
+│   │   ├── Team 2: Academic Planning & Course Management/               # Team 2 services
+│   │   │   ├── catalog/         # Course Catalog Service
+│   │   │   │   ├── components/
+│   │   │   │   ├── pages/       # Course listing, search, details
+│   │   │   │   ├── hooks/
+│   │   │   │   ├── services/
+│   │   │   │   ├── store/
+│   │   │   │   └── routes.js
+│   │   │   │
+│   │   │   ├── registration/    # Course Registration Service
+│   │   │   │   ├── components/
+│   │   │   │   ├── pages/       # Registration workflow
+│   │   │   │   ├── hooks/
+│   │   │   │   ├── services/
+│   │   │   │   ├── store/
+│   │   │   │   └── routes.js
+│   │   │   │
+│   │   │   └── plan/            # Academic Plan Service
+│   │   │       ├── components/
+│   │   │       ├── pages/       # Plan creation, validation
+│   │   │       ├── hooks/
+│   │   │       ├── services/
+│   │   │       ├── store/
+│   │   │       └── routes.js
+│   │   │
+│   │   └── Team 3: Advising & Communication/               # Team 3 services
+│   │       ├── appointment/     # Advising Appointment Service
+│   │       │   ├── components/
+│   │       │   ├── pages/       # Schedule, calendar
+│   │       │   ├── hooks/
+│   │       │   ├── services/
+│   │       │   ├── store/
+│   │       │   └── routes.js
+│   │       │
+│   │       ├── chat/            # Chat Service
+│   │       │   ├── components/
+│   │       │   ├── pages/       # Chat interface
+│   │       │   ├── hooks/
+│   │       │   ├── services/
+│   │       │   ├── store/
+│   │       │   └── routes.js
+│   │       │
+│   │       ├── notification/    # Notification Service
+│   │       │   ├── components/
+│   │       │   ├── pages/       # Notification settings
+│   │       │   ├── hooks/
+│   │       │   ├── services/
+│   │       │   ├── store/
+│   │       │   └── routes.js
+│   │       │
+│   │       └── grade-simulator/ # Grade Simulator Service
+│   │           ├── components/
+│   │           ├── pages/       # Simulation interface
+│   │           ├── hooks/
+│   │           ├── services/
+│   │           ├── store/
+│   │           └── routes.js
+│   │
+│   ├── shared/                  # Shared across all modules
+│   │   ├── components/          # Common UI components
+│   │   │   ├── Button/
+│   │   │   ├── Card/
+│   │   │   ├── Form/
+│   │   │   ├── Layout/
+│   │   │   │   ├── Sidebar/
+│   │   │   │   ├── Header/
+│   │   │   │   ├── Footer/
+│   │   │   │   └── index.js
+│   │   │   └── index.js         # Export all components
+│   │   │
+│   │   ├── hooks/               # Common hooks
+│   │   │   ├── useApi.js
+│   │   │   ├── useAuth.js
+│   │   │   └── index.js
+│   │   │
+│   │   ├── utils/               # Utility functions
+│   │   │   ├── api.js           # Axios instance/config
+│   │   │   ├── validation.js
+│   │   │   ├── date.js
+│   │   │   └── index.js
+│   │   │
+│   │   ├── constants/           # App-wide constants
+│   │   │   ├── endpoints.js
+│   │   │   ├── roles.js
+│   │   │   └── index.js
+│   │   │
+│   │   └── contexts/            # Context providers
+│   │       ├── AuthContext.js
+│   │       ├── ThemeContext.js
+│   │       └── index.js
+│   │
+│   ├── routes/                  # Routing configuration
+│   │   ├── AppRoutes.js         # Combines all module routes
+│   │   ├── ProtectedRoute.js    # Auth protection wrapper
+│   │   ├── RoleBasedRoute.js    # Role-based access control
+│   │   └── index.js
+│   │
+│   ├── store/                   # Global state (Redux, Context)
+│   │   ├── actions/
+│   │   ├── reducers/
+│   │   ├── selectors/
+│   │   └── index.js
+│   │
+│   ├── layouts/                 # Layout templates
+│   │   ├── StudentLayout.js
+│   │   ├── AdvisorLayout.js
+│   │   ├── AdminLayout.js
+│   │   └── index.js
+│   │
+│   ├── styles/                  # Global styles
+│   │   ├── theme.js
+│   │   ├── global.css
+│   │   └── variables.css
+│   │
+│   ├── assets/                  # Static assets
+│   │   ├── images/
+│   │   └── icons/
+│   │
+│   ├── config/                  # Configuration files
+│   │   ├── api.config.js
+│   │   └── app.config.js
+│   │
+│   ├── App.jsx                  # Main app component
+│   └── index.jsx                # Entry point
+│
+├── public/                      # Static files
+│   ├── index.html
+│   └── favicon.ico
+│
+├── kubernetes/                  # Kubernetes configs for frontend
+│   ├── deployment.yaml
+│   └── service.yaml
+│
+├── Dockerfile                   # Docker configuration
+├── package.json
+└── README.md
